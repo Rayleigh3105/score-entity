@@ -91,6 +91,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-serialization-json</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -172,6 +178,11 @@
                         <artifactId>kotlin-maven-allopen</artifactId>
                         <version>${kotlin.version}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-serialization-compiler-plugin</artifactId>
+                        <version>1.9.0</version>
+                    </dependency>
                 </dependencies>
                 <configuration>
                     <javaParameters>true</javaParameters>
@@ -187,6 +198,7 @@
                     </pluginOptions>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 
