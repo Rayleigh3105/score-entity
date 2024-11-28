@@ -17,6 +17,7 @@ class ScoreService {
         return scores.groupBy { it.group } // Gruppieren nach Gruppe
             .map { (group, groupScores) ->
                 ScoreboardEntry(
+                    groupId = group?.id ?: -1,
                     name = group?.name ?: "Unknown",
                     totalScore = groupScores.sumOf { it.points },
                     imageUrl = group?.imageUrl

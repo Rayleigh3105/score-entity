@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import org.rayleigh.data.group.GroupUpdateRequest
-import org.rayleigh.entity.Group
 import org.rayleigh.entity.Score
 import org.rayleigh.repository.GroupRepository
 import org.rayleigh.repository.ScoreRepository

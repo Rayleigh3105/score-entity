@@ -1,0 +1,128 @@
+---
+openapi: 3.0.3
+info:
+  title: score-entity API
+  version: 1.0.0-SNAPSHOT
+paths:
+  /groups:
+    get:
+      tags:
+      - Group Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+    post:
+      tags:
+      - Group Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Group"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+  /groups/{id}:
+    put:
+      tags:
+      - Group Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - Group Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+  /scoreboard-stream:
+    get:
+      tags:
+      - Scoreboard Ressource
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/PublisherString"
+  /scores:
+    post:
+      tags:
+      - Score Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreUpdateRequest"
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    Group:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        totalScore:
+          format: int32
+          type: integer
+    GroupUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        imageURL:
+          type: string
+          nullable: true
+    PublisherString:
+      type: object
+    ScoreUpdateRequest:
+      type: object
+      properties:
+        groupId:
+          format: int64
+          type: integer
+        points:
+          format: int32
+          type: integer
