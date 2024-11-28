@@ -3,6 +3,7 @@ package org.rayleigh.service
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import org.rayleigh.data.group.GroupUpdateRequest
 import org.rayleigh.entity.Group
 import org.rayleigh.entity.Score
 import org.rayleigh.repository.GroupRepository
@@ -20,6 +21,10 @@ class GroupService {
 
     @Transactional
     fun addPointsToGroup(groupId: Long, points: Int): Score {
+        if (points <= 0) {
+            throw IllegalArgumentException("Points must be greater than 0.")
+        }
+
         // Suche nach der Gruppe
         val group = groupRepository.findById(groupId)
             ?: throw IllegalArgumentException("Group with ID $groupId not found.")
@@ -35,7 +40,14 @@ class GroupService {
         return score
     }
 
-    fun getGroupById(groupId: Long): Group {
-        return groupRepository.findByIdOrThrow(groupId)
+    @Transactional
+    fun updateGroup(id: Long, request: GroupUpdateRequest) {
+        val group = groupRepository.findById(id)
+            ?: throw IllegalArgumentException("Group with ID $id not found.")
+
+        group.name = request.name.toString()
+        group.imageUrl = request.imageURL
+        groupRepository.persist(group)
     }
+
 }
