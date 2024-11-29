@@ -4,7 +4,7 @@ import AdminView from "@/components/admin/AdminView.vue";
 import TeamList from "@/components/admin/team/TeamList.vue";
 import EventList from "@/components/admin/event/EventList.vue";
 import Settings from "@/components/admin/settings/Settings.vue";
-import EntityList from "@/components/admin/entity/EntityList.vue";
+import ItemList from "@/components/admin/item/ItemList.vue";
 
 // Routes ohne RouteRecordRaw typisieren
 const routes = [
@@ -39,9 +39,9 @@ const routes = [
                 component: Settings
             },
             {
-                path: '/admin/entity',
-                name: 'Entitäten',
-                component: EntityList
+                path: '/admin/item',
+                name: 'Items',
+                component: ItemList
             },
         ]
     }

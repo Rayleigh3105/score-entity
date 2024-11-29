@@ -76,6 +76,66 @@ paths:
       responses:
         "200":
           description: OK
+  /items:
+    get:
+      tags:
+      - Item Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+    post:
+      tags:
+      - Item Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /items/{id}:
+    put:
+      tags:
+      - Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
   /scoreboard-stream:
     get:
       tags:
@@ -206,6 +266,39 @@ components:
           type: string
         imageUrl:
           type: string
+    Item:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          type: string
+        image:
+          type: object
+          allOf:
+          - $ref: "#/components/schemas/Image"
+          nullable: true
+        scoreValue:
+          format: int32
+          type: integer
+    ItemUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        image:
+          type: object
+          allOf:
+          - $ref: "#/components/schemas/Image"
+          nullable: true
+        scoreValue:
+          format: int32
+          type: integer
     MultipartFormDataInput:
       type: object
       properties:
