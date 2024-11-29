@@ -30,21 +30,25 @@
         </div>
       </template>
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-      <Column field="name" header="Name" ></Column>
+      <Column field="name" header="Name"></Column>
       <Column :exportable="false" style="min-width: 12rem; text-align: right">
         <template #body="slotProps">
+          <Button icon="bx bx-pencil" outlined rounded class="mr-2" @click="editGroup(slotProps.data)"/>
           <Button icon="bx bx-trash" outlined rounded severity="danger" @click="confirmDeleteGroup(slotProps.data)"/>
         </template>
       </Column>
     </DataTable>
 
-    <Dialog v-model:visible="groupDialog" :style="{ width: '450px' }" header="Neue Gruppe erstellen" :modal="true">
+    <Dialog v-model:visible="groupDialog" :style="{ width: '450px' }" header="Gruppen Details" :modal="true">
       <div class="flex flex-col gap-6">
         <div>
           <label for="name" class="block font-bold mb-3">Name</label>
           <InputText id="name" v-model.trim="group.name" required="true" autofocus :invalid="submitted && !group.name"
                      fluid/>
           <small v-if="submitted && !group.name" class="text-red-500">Name is required.</small>
+        </div>
+        <div>
+          <FileUpload mode="basic" accept="image/*" name="demo[]" :url="config.basePath + '/file'" :auto="true" chooseLabel="Auswählen"/>
         </div>
       </div>
 
@@ -83,7 +87,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
-import {Configuration, GroupResourceApi} from "@/api";
+import {Configuration, GroupResourceApi, FileResourceApi} from "@/api";
 import type {Group} from "@/api";
 
 import Toast from 'primevue/toast';
@@ -95,6 +99,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import FileUpload from 'primevue/fileupload';
 import {useToast} from "primevue";
 
 const deleteGroupDialog = ref(false);
@@ -105,7 +110,6 @@ const initialGroup = {
   imageUrl: undefined,
   totalScore: undefined,
 }
-
 const group = ref<Group>(initialGroup);
 const groupDialog = ref(false);
 const submitted = ref(false);
@@ -122,7 +126,8 @@ const config = new Configuration({
 });
 
 // API-Instanz erstellen
-const api = new GroupResourceApi(config);
+const groupApi = new GroupResourceApi(config);
+const fileApi = new FileResourceApi(config);
 
 // Daten abrufen
 const fetchGroups = async () => {
@@ -130,7 +135,7 @@ const fetchGroups = async () => {
   error.value = null;
 
   try {
-    const response = await api.groupsGet(); // API-Aufruf
+    const response = await groupApi.groupsGet(); // API-Aufruf
     groups.value = response.data;
   } catch (err) {
     error.value = 'Fehler beim Abrufen der Gruppen.';
@@ -154,7 +159,7 @@ const hideDialog = () => {
 
 const createGroup = async () => {
   try {
-    const response = await api.groupsPost(group.value);
+    const response = await groupApi.groupsPost(group.value);
 
     if (response.data.id && response.status === 200) {
       submitted.value = true;
@@ -194,7 +199,7 @@ const confirmDeleteGroup = (grp: Group) => {
 const deleteSelectedGroups = () => {
   try {
     selectedGroups.value.forEach(async (groupToDelete: Group) => {
-      const response = await api.groupsIdDelete(groupToDelete.id as number);
+      const response = await groupApi.groupsIdDelete(groupToDelete.id as number);
       if (response.status === 200) {
         groups.value = groups.value.filter(val => val.id !== groupToDelete.id);
       }
@@ -217,7 +222,7 @@ const deleteSelectedGroups = () => {
 
 const deleteGroup = async () => {
   try {
-    const response = await api.groupsIdDelete(group.value.id as number);
+    const response = await groupApi.groupsIdDelete(group.value.id as number);
 
     if (response.status === 200 || response.status === 204) {
       groups.value = groups.value.filter(val => val.id !== group.value.id);
@@ -237,9 +242,9 @@ const deleteGroup = async () => {
   }
 }
 
-const editGroup = (grp) => {
+const editGroup = (grp: Group) => {
   group.value = {...grp};
-  productDialog.value = true;
+  groupDialog.value = true;
 };
 
 

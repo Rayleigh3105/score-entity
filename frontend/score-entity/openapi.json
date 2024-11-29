@@ -4,6 +4,32 @@ info:
   title: score-entity API
   version: 1.0.0-SNAPSHOT
 paths:
+  /file:
+    post:
+      tags:
+      - File Resource
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  $ref: "#/components/schemas/FileUpload"
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /file/test:
+    get:
+      tags:
+      - File Resource
+      responses:
+        "200":
+          description: OK
   /groups:
     get:
       tags:
@@ -89,6 +115,8 @@ paths:
           description: OK
 components:
   schemas:
+    FileUpload:
+      type: object
     Group:
       required:
       - name

@@ -15,7 +15,6 @@ import java.util.concurrent.Flow
 @Path("/scoreboard-stream")
 class ScoreboardRessource {
 
-
     @Inject
     lateinit var scoreService: ScoreService
 
