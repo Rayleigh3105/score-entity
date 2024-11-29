@@ -5,6 +5,7 @@ import TeamList from "@/components/admin/team/TeamList.vue";
 import EventList from "@/components/admin/event/EventList.vue";
 import Settings from "@/components/admin/settings/Settings.vue";
 import ItemList from "@/components/admin/item/ItemList.vue";
+import CentralView from "@/components/admin/central/CentralView.vue";
 
 // Routes ohne RouteRecordRaw typisieren
 const routes = [
@@ -23,6 +24,11 @@ const routes = [
         name: 'Admin',
         component: AdminView,
         children: [
+            {
+                path: '/admin/central',
+                name: 'Zentrale',
+                component: CentralView,
+            },
             {
                 path: '/admin/teams',
                 name: 'Teams',
