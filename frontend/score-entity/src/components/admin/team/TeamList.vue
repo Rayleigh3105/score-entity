@@ -5,11 +5,31 @@
     <Toolbar class="mb-6">
       <template #start>
         <Button label="Hinzufügen" icon="bx bx-plus" class="mr-2" @click="openNew"/>
+        <Button label="Löschen" icon="pi pi-trash" severity="danger" outlined @click="confirmDeleteSelected"
+                :disabled="!selectedGroups || !selectedGroups.length"/>
       </template>
 
     </Toolbar>
 
-    <DataTable :value="groups" tableStyle="min-width: 50rem">
+    <DataTable
+        ref="dt"
+        :filters="filters"
+        v-model:selection="selectedGroups"
+        data-key="id"
+        :value="groups"
+    >
+      <template #header>
+        <div class="flex flex-wrap gap-2 items-center justify-between">
+          <h4 class="m-0">Gruppen Verwalten</h4>
+          <IconField>
+            <InputIcon>
+              <i class="bx bx-search"/>
+            </InputIcon>
+            <InputText v-model="filters['global'].value" placeholder="Suchen..."/>
+          </IconField>
+        </div>
+      </template>
+      <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
       <Column field="id" header="Id"></Column>
       <Column field="name" header="Name"></Column>
     </DataTable>
@@ -26,7 +46,32 @@
 
       <template #footer>
         <Button label="Abbrechen" icon="bx bx-x" text @click="hideDialog"/>
-        <Button label="Speichern" icon="bx bx-save" @click="saveGroup"/>
+        <Button label="Speichern" icon="bx bx-save" @click="createGroup"/>
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="deleteGroupsDialog" :style="{ width: '450px' }" header="Bestätigung" :modal="true">
+      <div class="flex items-center gap-4">
+        <i class="pi pi-exclamation-triangle !text-3xl"/>
+        <span v-if="group">Willst du wirklich die selektierten Teams löschen?</span>
+      </div>
+      <template #footer>
+        <Button label="Nein" icon="bx bx-x" text @click="deleteGroupsDialog = false"/>
+        <Button label="Ja" icon="bx bx-check" text @click="deleteSelectedProducts"/>
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="deleteGroupDialog" :style="{ width: '450px' }" header="Bestätigung" :modal="true">
+      <div class="flex items-center gap-4">
+        <i class="pi pi-exclamation-triangle !text-3xl"/>
+        <span v-if="group"
+        >Willst du wirklich <b>{{ group.name }}</b
+        > löschen?</span
+        >
+      </div>
+      <template #footer>
+        <Button label="Nein" icon="bx bx-x" text @click="deleteGroupDialog = false"/>
+        <Button label="Ja" icon="bx bx-check" @click="deleteGroup"/>
       </template>
     </Dialog>
   </div>
@@ -34,6 +79,7 @@
 
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
+import {FilterMatchMode} from '@primevue/core/api';
 import {Configuration, type Group, GroupResourceApi} from "../../../../api";
 
 import Toast from 'primevue/toast';
@@ -43,13 +89,20 @@ import Button from 'primevue/button';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import {useToast} from "primevue";
 
+const deleteGroupDialog = ref(false);
+const deleteGroupsDialog = ref(false);
 const group = ref<Group>({});
 const groupDialog = ref(false);
 const submitted = ref(false);
 const toast = useToast();
-// Zustand der Komponente
+const filters = ref({
+  'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
+});
+const selectedGroups = ref();
 const groups = ref([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
@@ -88,17 +141,55 @@ const hideDialog = () => {
   submitted.value = false;
 };
 
-const saveGroup = () => {
-  submitted.value = true;
-  toast.add({
-    severity: 'success',
-    summary: 'Erfolgreich',
-    detail: 'Gruppe erfolgreich erstellt.',
-    life: 3000
-  });
-  groupDialog.value = false;
-  group.value = {};
+const createGroup = async () => {
+  try {
+    const response = await api.groupsPost(group.value);
 
+    if (response.data.id && response.status === 200) {
+      submitted.value = true;
+      toast.add({
+        severity: 'success',
+        summary: 'Erfolgreich',
+        detail: 'Gruppe erfolgreich erstellt.',
+        life: 3000
+      });
+      groupDialog.value = false;
+      group.value = {};
+
+      groups.value.push(response.data);
+    }
+  } catch (error) {
+    console.error('Fehler beim Speichern der Gruppe:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Gruppe konnte nicht gespeichert werden.',
+      life: 3000,
+    });
+  }
+
+
+};
+
+const confirmDeleteSelected = () => {
+  deleteGroupsDialog.value = true;
+};
+
+const deleteSelectedProducts = () => {
+  groups.value = groups.value.filter(val => !selectedGroups.value.includes(val));
+  deleteGroupsDialog.value = false;
+  selectedGroups.value = null;
+  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Teams gelöscht', life: 3000});
+};
+const confirmDeleteProduct = (grp) => {
+  group.value = grp;
+  deleteGroupDialog.value = true;
+};
+const deleteGroup = () => {
+  groups.value = groups.value.filter(val => val.id !== group.value.id);
+  deleteGroupDialog.value = false;
+  group.value = {};
+  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Team gelöscht', life: 3000});
 };
 
 onMounted(() => {
@@ -107,5 +198,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Optional: Stile für die Tabelle */
 </style>
