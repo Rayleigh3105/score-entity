@@ -30,8 +30,12 @@
         </div>
       </template>
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-      <Column field="id" header="Id"></Column>
       <Column field="name" header="Name"></Column>
+      <Column :exportable="false" style="min-width: 12rem; text-align: right">
+        <template #body="slotProps">
+          <Button icon="bx bx-trash" outlined rounded severity="danger" @click="confirmDeleteGroup(slotProps.data)"/>
+        </template>
+      </Column>
     </DataTable>
 
     <Dialog v-model:visible="groupDialog" :style="{ width: '450px' }" header="Neue Gruppe erstellen" :modal="true">
@@ -183,6 +187,11 @@ const confirmDeleteSelected = () => {
   deleteGroupsDialog.value = true;
 };
 
+const confirmDeleteGroup = (grp: Group) => {
+  group.value = grp;
+  deleteGroupDialog.value = true;
+};
+
 const deleteSelectedGroups = () => {
   try {
     selectedGroups.value.forEach(async (groupToDelete: Group) => {
@@ -211,7 +220,7 @@ const deleteGroup = async () => {
       try {
         const response = await api.groupsIdDelete(group.value.id as number);
 
-        if (response.status === 200) {
+        if (response.status === 200 || response.status === 204) {
           groups.value = groups.value.filter(val => val.id !== group.value.id);
           deleteGroupDialog.value = false;
           group.value = initialGroup;
