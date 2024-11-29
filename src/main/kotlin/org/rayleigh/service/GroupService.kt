@@ -46,7 +46,7 @@ class GroupService {
             ?: throw IllegalArgumentException("Group with ID $id not found.")
 
         group.name = request.name.toString()
-        group.imageUrl = request.imageURL
+        group.image = request.image
         groupRepository.persist(group)
         return group
     }

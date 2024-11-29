@@ -8,7 +8,7 @@ import org.jboss.resteasy.reactive.server.multipart.FileItem
 @ApplicationScoped
 class CloudinaryFileService {
 
-    fun uploadFile(file: FileItem): String {
+    fun uploadFile(file: FileItem): Map<*, *> {
         val cloudinary = Cloudinary(Dotenv.load().get("CLOUDINARY_URL"))
         val params = mapOf(
             "use_filename" to true,
@@ -17,7 +17,7 @@ class CloudinaryFileService {
             "asset_folder" to "score-entity"
         )
 
-        val uploadedFile = cloudinary.uploader().upload(file.file.toFile(), params)
-        return uploadedFile["secure_url"].toString()
+
+        return cloudinary.uploader().upload(file.file.toFile(), params)
     }
 }

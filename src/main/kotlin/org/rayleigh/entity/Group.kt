@@ -16,6 +16,9 @@ class Group(
     var scores: MutableList<Score> = mutableListOf(),
 
     var name: String = "",
-    var imageUrl: String? = null,
+
+    @OneToOne(orphanRemoval = false)
+    var image: Image? = null,
+
     var totalScore: Int = 0
 )

@@ -14,15 +14,15 @@ class ScoreService {
     fun calculateScoreboard(): List<ScoreboardEntry> {
         val scores = scoreRepository.listAll()
 
-        return scores.groupBy { it.group } // Gruppieren nach Gruppe
+        return scores.groupBy { it.group }
             .map { (group, groupScores) ->
                 ScoreboardEntry(
                     groupId = group?.id ?: -1,
                     name = group?.name ?: "Unknown",
                     totalScore = groupScores.sumOf { it.points },
-                    imageUrl = group?.imageUrl
+                    imageUrl = group?.image?.imageUrl ?: ""
                 )
             }
-            .sortedByDescending { it.totalScore } // Nach Punkten sortieren
+            .sortedByDescending { it.totalScore }
     }
 }

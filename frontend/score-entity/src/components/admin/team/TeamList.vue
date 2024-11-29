@@ -17,6 +17,11 @@
         v-model:selection="selectedGroups"
         data-key="id"
         :value="groups"
+        :paginator="true"
+        :rows="10"
+        :rowsPerPageOptions="[10, 25]"
+        scrollable
+        scroll-height="flex"
     >
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -29,7 +34,22 @@
           </IconField>
         </div>
       </template>
-      <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+      <Column selectionMode="multiple" style="width: 3rem"></Column>
+      <Column header="Bild" style="width: 3rem">
+        <template #body="{ data }">
+          <div class="flex items-center gap-2">
+            <img v-if="data.image?.imageUrl"
+                 alt="Gruppenbild"
+                 :src="data.image?.imageUrl"
+                 style="width: 32px"/>
+            <img v-else
+                 alt="Gruppenbild"
+                 class="rounded-full"
+                 src="https://res.cloudinary.com/drcmgtifj/image/upload/c_thumb,w_200,g_face/v1732888382/vecteezy_hand-drawnman-avatar-profile-icon-for-social-networks__cvzd71.jpg"
+                 style="width: 32px"/>
+          </div>
+        </template>
+      </Column>
       <Column field="name" header="Name"></Column>
       <Column :exportable="false" style="min-width: 12rem; text-align: right">
         <template #body="slotProps">
@@ -39,26 +59,64 @@
       </Column>
     </DataTable>
 
-    <Dialog v-model:visible="groupDialog" :style="{ width: '450px' }" header="Gruppen Details" :modal="true">
-      <div class="flex flex-col gap-6">
-        <div>
-          <label for="name" class="block font-bold mb-3">Name</label>
-          <InputText id="name" v-model.trim="group.name" required="true" autofocus :invalid="submitted && !group.name"
-                     fluid/>
-          <small v-if="submitted && !group.name" class="text-red-500">Name is required.</small>
-        </div>
-        <div>
-          <FileUpload mode="basic" accept="image/*" name="demo[]" :url="config.basePath + '/file'" :auto="true"
-                      chooseLabel="Auswählen"/>
-        </div>
-      </div>
+    <template>
+      <Dialog v-model:visible="groupDialog" :style="{ width: '450px' }" header="Gruppen Details" :modal="true">
+        <div class="flex flex-col gap-6">
+          <!-- Centered and Bigger Image -->
+          <div class="flex justify-center">
+            <img
+                v-if="image.imageUrl"
+                class="w-32 h-32 rounded-sm bg-gray-50 object-cover"
+                :src="image.imageUrl"
+                alt="Gruppenbild"
+            />
+            <img v-else
+                 class="w-32 h-32 rounded-full bg-gray-50 object-cover"
+                 src="https://res.cloudinary.com/drcmgtifj/image/upload/c_thumb,w_200,g_face/v1732888382/vecteezy_hand-drawnman-avatar-profile-icon-for-social-networks__cvzd71.jpg"
+                 alt="Gruppenbild"/>
+          </div>
 
-      <template #footer>
-        <Button label="Abbrechen" icon="bx bx-x" text @click="hideDialog"/>
-        <Button v-if="group.id == null" label="Speichern" icon="bx bx-save" @click="createGroup"/>
-        <Button v-else label="Speichern" icon="bx bx-save" @click="updateGroup"/>
-      </template>
-    </Dialog>
+          <!-- File Upload First -->
+          <div v-if="!image.imageUrl">
+            <FileUpload
+                mode="basic"
+                accept="image/*"
+                name="demo[]"
+                :url="config.basePath + '/file'"
+                :auto="true"
+                chooseLabel="Auswählen"
+                @upload="onUpload"
+            />
+          </div>
+          <div class="flex justify-center" v-else>
+            <Button icon="bx bx-trash" outlined rounded severity="danger"
+                    @click="image = {imageUrl: '', publicId: ''}"/>
+
+          </div>
+
+          <!-- Input Field for Name -->
+          <div>
+            <label for="name" class="block font-bold mb-3">Name</label>
+            <InputText
+                id="name"
+                v-model.trim="group.name"
+                required="true"
+                autofocus
+                :invalid="submitted && !group.name"
+                fluid
+            />
+            <small v-if="submitted && !group.name" class="text-red-500">Name is required.</small>
+          </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <template #footer>
+          <Button label="Abbrechen" icon="bx bx-x" text @click="hideDialog"/>
+          <Button v-if="group.id == null" label="Speichern" icon="bx bx-save" @click="createGroup"/>
+          <Button v-else label="Speichern" icon="bx bx-save" @click="updateGroup"/>
+        </template>
+      </Dialog>
+    </template>
 
     <Dialog v-model:visible="deleteGroupsDialog" :style="{ width: '450px' }" header="Bestätigung" :modal="true">
       <div class="flex items-center gap-4">
@@ -89,7 +147,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
-import type {Group} from "@/api";
+import type {Group, Image} from "@/api";
 import {Configuration, GroupResourceApi} from "@/api";
 
 import Toast from 'primevue/toast';
@@ -101,7 +159,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import FileUpload from 'primevue/fileupload';
+import FileUpload, {type FileUploadUploadEvent} from 'primevue/fileupload';
 import {useToast} from "primevue";
 
 const deleteGroupDialog = ref(false);
@@ -149,6 +207,7 @@ const fetchGroups = async () => {
 
 const openNew = () => {
   group.value = {...initialGroup};
+  image.value = {publicId: '', imageUrl: ''};
   submitted.value = false;
   groupDialog.value = true;
 };
@@ -160,6 +219,11 @@ const hideDialog = () => {
 
 const createGroup = async () => {
   try {
+    if (image.value.id) {
+      group.value.image = image.value
+    } else {
+      group.value.image = undefined;
+    }
     const response = await groupApi.groupsPost(group.value);
 
     if (response.data.id && response.status === 200) {
@@ -190,7 +254,7 @@ const updateGroup = async () => {
   try {
     const updateRequest = {
       name: group.value.name,
-      imageUrl: group.value.imageUrl,
+      image: image.value,
     };
 
     const response = await groupApi.groupsIdPut(group.value.id as number, updateRequest);
@@ -280,8 +344,21 @@ const deleteGroup = async () => {
 
 const editGroup = (grp: Group) => {
   group.value = {...grp};
+  image.value = grp.image ?? {publicId: '', imageUrl: ''};
   groupDialog.value = true;
 };
+
+const image = ref<Image>({
+  publicId: '',
+  imageUrl: '',
+});
+
+const onUpload = (event: FileUploadUploadEvent) => {
+  const response = JSON.parse(event.xhr.response)
+  image.value.imageUrl = response.imageUrl; // Update the reactive property
+  image.value = response
+  console.log('Image uploaded:', image.value);
+}
 
 
 onMounted(() => {
