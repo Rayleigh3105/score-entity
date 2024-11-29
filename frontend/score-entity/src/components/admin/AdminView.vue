@@ -16,7 +16,7 @@
     <Sidebar v-if="menuOpen || isLargeScreen" class="lg:flex" />
 
     <!-- Hauptinhalt -->
-    <div class="flex-1 p-6 mt-12">
+    <div class="flex-1 p-6 mt-14">
       <router-view />
     </div>
   </div>

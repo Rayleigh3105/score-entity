@@ -30,7 +30,7 @@
         </div>
       </template>
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-      <Column field="name" header="Name"></Column>
+      <Column field="name" header="Name" ></Column>
       <Column :exportable="false" style="min-width: 12rem; text-align: right">
         <template #body="slotProps">
           <Button icon="bx bx-trash" outlined rounded severity="danger" @click="confirmDeleteGroup(slotProps.data)"/>
@@ -57,7 +57,7 @@
     <Dialog v-model:visible="deleteGroupsDialog" :style="{ width: '450px' }" header="Bestätigung" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl"/>
-        <span v-if="group">Willst du wirklich die selektierten Gruppen löschen?</span>
+        <span v-if="group">Willst du wirklich die selektierten Gruppen löschen?<br> Es werden ggf. alle dazugehörigen Daten gelöscht.</span>
       </div>
       <template #footer>
         <Button label="Nein" icon="bx bx-x" text @click="deleteGroupsDialog = false"/>
@@ -70,8 +70,7 @@
         <i class="pi pi-exclamation-triangle !text-3xl"/>
         <span v-if="group"
         >Willst du wirklich <b>{{ group.name }}</b
-        > löschen?</span
-        >
+        > löschen?<br> Es werden ggf. alle dazugehörigen Daten gelöscht.</span>
       </div>
       <template #footer>
         <Button label="Nein" icon="bx bx-x" text @click="deleteGroupDialog = false"/>
@@ -143,7 +142,7 @@ const fetchGroups = async () => {
 
 
 const openNew = () => {
-  group.value = initialGroup;
+  group.value = {...initialGroup};
   submitted.value = false;
   groupDialog.value = true;
 };
@@ -166,7 +165,7 @@ const createGroup = async () => {
         life: 3000
       });
       groupDialog.value = false;
-      group.value = initialGroup;
+      group.value = {...initialGroup};
 
       groups.value.push(response.data);
     }
@@ -188,7 +187,7 @@ const confirmDeleteSelected = () => {
 };
 
 const confirmDeleteGroup = (grp: Group) => {
-  group.value = grp;
+  group.value = {...grp};
   deleteGroupDialog.value = true;
 };
 
@@ -217,28 +216,32 @@ const deleteSelectedGroups = () => {
 };
 
 const deleteGroup = async () => {
-      try {
-        const response = await api.groupsIdDelete(group.value.id as number);
+  try {
+    const response = await api.groupsIdDelete(group.value.id as number);
 
-        if (response.status === 200 || response.status === 204) {
-          groups.value = groups.value.filter(val => val.id !== group.value.id);
-          deleteGroupDialog.value = false;
-          group.value = initialGroup;
-          toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Gruppe gelöscht', life: 3000});
-        }
-
-      } catch (error) {
-        console.error('Fehler beim Löschen der Gruppe:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Fehler',
-          detail: 'Gruppe konnte nicht gelöscht werden.',
-          life: 3000,
-        });
-      }
-
+    if (response.status === 200 || response.status === 204) {
+      groups.value = groups.value.filter(val => val.id !== group.value.id);
+      deleteGroupDialog.value = false;
+      group.value = {...initialGroup};
+      toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Gruppe gelöscht', life: 3000});
     }
-;
+
+  } catch (error) {
+    console.error('Fehler beim Löschen der Gruppe:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Gruppe konnte nicht gelöscht werden.',
+      life: 3000,
+    });
+  }
+}
+
+const editGroup = (grp) => {
+  group.value = {...grp};
+  productDialog.value = true;
+};
+
 
 onMounted(() => {
   fetchGroups();

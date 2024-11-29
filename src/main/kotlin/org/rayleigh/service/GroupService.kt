@@ -49,4 +49,12 @@ class GroupService {
         groupRepository.persist(group)
     }
 
+    @Transactional
+    fun deleteGroup(id: Long) {
+        val group = groupRepository.findById(id)
+            ?: throw IllegalArgumentException("Group with ID $id not found.")
+
+        groupRepository.delete(group)
+    }
+
 }
