@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import org.rayleigh.data.group.GroupUpdateRequest
+import org.rayleigh.entity.Group
 import org.rayleigh.entity.Score
 import org.rayleigh.repository.GroupRepository
 import org.rayleigh.repository.ScoreRepository
@@ -40,13 +41,14 @@ class GroupService {
     }
 
     @Transactional
-    fun updateGroup(id: Long, request: GroupUpdateRequest) {
+    fun updateGroup(id: Long, request: GroupUpdateRequest): Group {
         val group = groupRepository.findById(id)
             ?: throw IllegalArgumentException("Group with ID $id not found.")
 
         group.name = request.name.toString()
         group.imageUrl = request.imageURL
         groupRepository.persist(group)
+        return group
     }
 
     @Transactional

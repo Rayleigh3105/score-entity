@@ -51,8 +51,8 @@ class GroupResource {
     @Produces(MediaType.APPLICATION_JSON)
     fun updateGroup(@PathParam("id") id: Long, request: GroupUpdateRequest): Response {
         return try {
-            groupService.updateGroup(id, request)
-            Response.ok(mapOf("message" to "Group updated successfully")).build()
+            val updateGroup = groupService.updateGroup(id, request)
+            Response.ok(updateGroup).build()
         } catch (e: IllegalArgumentException) {
             Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to e.message))

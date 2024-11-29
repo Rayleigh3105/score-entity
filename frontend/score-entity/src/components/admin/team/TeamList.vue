@@ -48,13 +48,15 @@
           <small v-if="submitted && !group.name" class="text-red-500">Name is required.</small>
         </div>
         <div>
-          <FileUpload mode="basic" accept="image/*" name="demo[]" :url="config.basePath + '/file'" :auto="true" chooseLabel="Auswählen"/>
+          <FileUpload mode="basic" accept="image/*" name="demo[]" :url="config.basePath + '/file'" :auto="true"
+                      chooseLabel="Auswählen"/>
         </div>
       </div>
 
       <template #footer>
         <Button label="Abbrechen" icon="bx bx-x" text @click="hideDialog"/>
-        <Button label="Speichern" icon="bx bx-save" @click="createGroup"/>
+        <Button v-if="group.id == null" label="Speichern" icon="bx bx-save" @click="createGroup"/>
+        <Button v-else label="Speichern" icon="bx bx-save" @click="updateGroup"/>
       </template>
     </Dialog>
 
@@ -87,8 +89,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
-import {Configuration, GroupResourceApi, FileResourceApi} from "@/api";
 import type {Group} from "@/api";
+import {Configuration, GroupResourceApi} from "@/api";
 
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -127,7 +129,6 @@ const config = new Configuration({
 
 // API-Instanz erstellen
 const groupApi = new GroupResourceApi(config);
-const fileApi = new FileResourceApi(config);
 
 // Daten abrufen
 const fetchGroups = async () => {
@@ -135,7 +136,7 @@ const fetchGroups = async () => {
   error.value = null;
 
   try {
-    const response = await groupApi.groupsGet(); // API-Aufruf
+    const response = await groupApi.groupsGet();
     groups.value = response.data;
   } catch (err) {
     error.value = 'Fehler beim Abrufen der Gruppen.';
@@ -183,8 +184,43 @@ const createGroup = async () => {
       life: 3000,
     });
   }
+};
 
+const updateGroup = async () => {
+  try {
+    const updateRequest = {
+      name: group.value.name,
+      imageUrl: group.value.imageUrl,
+    };
 
+    const response = await groupApi.groupsIdPut(group.value.id as number, updateRequest);
+
+    if (response.status === 200) {
+      submitted.value = true;
+      toast.add({
+        severity: 'success',
+        summary: 'Erfolgreich',
+        detail: 'Gruppe erfolgreich aktualisiert.',
+        life: 3000
+      });
+      groupDialog.value = false;
+      group.value = {...initialGroup};
+
+      const index = groups.value.findIndex(val => val.id === response.data.id);
+      if (index != -1 && groups.value[index]) {
+        groups.value[index] = response.data as unknown as Group;
+      }
+
+    }
+  } catch (error) {
+    console.error('Fehler beim Speichern der Gruppe:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Gruppe konnte nicht gespeichert werden.',
+      life: 3000,
+    });
+  }
 };
 
 const confirmDeleteSelected = () => {
