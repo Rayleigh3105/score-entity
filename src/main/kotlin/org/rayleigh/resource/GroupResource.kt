@@ -33,6 +33,7 @@ class GroupResource {
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     fun deleteGroup(@PathParam("id") id: Long): Response {
         val group = groupRepository.findById(id)
         if (group != null) {

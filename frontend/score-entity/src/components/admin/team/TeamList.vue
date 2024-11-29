@@ -53,11 +53,11 @@
     <Dialog v-model:visible="deleteGroupsDialog" :style="{ width: '450px' }" header="Bestätigung" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl"/>
-        <span v-if="group">Willst du wirklich die selektierten Teams löschen?</span>
+        <span v-if="group">Willst du wirklich die selektierten Gruppen löschen?</span>
       </div>
       <template #footer>
         <Button label="Nein" icon="bx bx-x" text @click="deleteGroupsDialog = false"/>
-        <Button label="Ja" icon="bx bx-check" text @click="deleteSelectedProducts"/>
+        <Button label="Ja" icon="bx bx-check" text @click="deleteSelectedGroups"/>
       </template>
     </Dialog>
 
@@ -80,7 +80,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
-import {Configuration, type Group, GroupResourceApi} from "../../../../api";
+import {Configuration, GroupResourceApi} from "@/api";
+import type {Group} from "@/api";
 
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -95,15 +96,22 @@ import {useToast} from "primevue";
 
 const deleteGroupDialog = ref(false);
 const deleteGroupsDialog = ref(false);
-const group = ref<Group>({});
+const initialGroup = {
+  id: null,
+  name: '',
+  imageUrl: undefined,
+  totalScore: undefined,
+}
+
+const group = ref<Group>(initialGroup);
 const groupDialog = ref(false);
 const submitted = ref(false);
 const toast = useToast();
 const filters = ref({
   'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
 });
-const selectedGroups = ref();
-const groups = ref([]);
+const selectedGroups = ref<Group[]>([]);
+const groups = ref<Group[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const config = new Configuration({
@@ -131,7 +139,7 @@ const fetchGroups = async () => {
 
 
 const openNew = () => {
-  group.value = {};
+  group.value = initialGroup;
   submitted.value = false;
   groupDialog.value = true;
 };
@@ -154,7 +162,7 @@ const createGroup = async () => {
         life: 3000
       });
       groupDialog.value = false;
-      group.value = {};
+      group.value = initialGroup;
 
       groups.value.push(response.data);
     }
@@ -175,22 +183,53 @@ const confirmDeleteSelected = () => {
   deleteGroupsDialog.value = true;
 };
 
-const deleteSelectedProducts = () => {
-  groups.value = groups.value.filter(val => !selectedGroups.value.includes(val));
-  deleteGroupsDialog.value = false;
-  selectedGroups.value = null;
-  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Teams gelöscht', life: 3000});
+const deleteSelectedGroups = () => {
+  try {
+    selectedGroups.value.forEach(async (groupToDelete: Group) => {
+      const response = await api.groupsIdDelete(groupToDelete.id as number);
+      if (response.status === 200) {
+        groups.value = groups.value.filter(val => val.id !== groupToDelete.id);
+      }
+    });
+    groups.value = groups.value.filter(val => !selectedGroups.value.includes(val));
+    deleteGroupsDialog.value = false;
+    selectedGroups.value = [];
+    toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Gruppen gelöscht', life: 3000});
+  } catch (error) {
+    console.error('Fehler beim Löschen der Gruppen:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Gruppen konnten nicht gelöscht werden.',
+      life: 3000,
+    });
+  }
+
 };
-const confirmDeleteProduct = (grp) => {
-  group.value = grp;
-  deleteGroupDialog.value = true;
-};
-const deleteGroup = () => {
-  groups.value = groups.value.filter(val => val.id !== group.value.id);
-  deleteGroupDialog.value = false;
-  group.value = {};
-  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Team gelöscht', life: 3000});
-};
+
+const deleteGroup = async () => {
+      try {
+        const response = await api.groupsIdDelete(group.value.id as number);
+
+        if (response.status === 200) {
+          groups.value = groups.value.filter(val => val.id !== group.value.id);
+          deleteGroupDialog.value = false;
+          group.value = initialGroup;
+          toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Gruppe gelöscht', life: 3000});
+        }
+
+      } catch (error) {
+        console.error('Fehler beim Löschen der Gruppe:', error);
+        toast.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Gruppe konnte nicht gelöscht werden.',
+          life: 3000,
+        });
+      }
+
+    }
+;
 
 onMounted(() => {
   fetchGroups();
