@@ -48,7 +48,11 @@
     <template>
       <Dialog v-model:visible="scoreDialog" :style="{ width: '450px' }" header="Punkte" :modal="true">
         <div>
-          <div class="button-grid">
+          <div style="text-align: center">
+            <ToggleButton v-model="checked" onLabel="Addieren" offLabel="Subtrahieren" on-icon="bx bx-plus" off-icon="bx bx-minus" />
+          </div>
+
+          <div class="button-grid mt-6">
             <Button
                 v-for="number in numbers"
                 :key="number"
@@ -104,6 +108,7 @@ import InputIcon from 'primevue/inputicon';
 import {useToast} from "primevue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
+import ToggleButton from "primevue/togglebutton";
 
 const toast = useToast();
 const filters = ref({
@@ -114,6 +119,7 @@ const initialScoreUpdate: ScoreUpdateRequest = {
   groupId: undefined,
   points: undefined,
 }
+const checked = ref(true);
 const scoreDialog = ref(false);
 const score = ref<ScoreUpdateRequest>(initialScoreUpdate);
 
@@ -160,7 +166,7 @@ const fetchItems = async () => {
 
 const doScore = async (numberToScore: number) => {
   try {
-    score.value.points = numberToScore;
+    score.value.points = checked.value ? numberToScore : -numberToScore;
     await scoreApi.scoresPost(score.value);
     toast.add({severity: 'success', summary: 'Erfolg', detail: 'Punkte erfolgreich gespeichert.', life: 3000});
   } catch (err) {
@@ -173,6 +179,7 @@ const doScore = async (numberToScore: number) => {
 
 const onRowSelect = (event: DataTableRowSelectEvent) => {
   scoreDialog.value = true;
+  checked.value = true;
   score.value.groupId = event.data.id;
 
   fetchItems()

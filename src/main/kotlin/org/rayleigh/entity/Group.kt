@@ -19,6 +19,4 @@ class Group(
 
     @OneToOne(orphanRemoval = false)
     var image: Image? = null,
-
-    var totalScore: Int = 0
 )
