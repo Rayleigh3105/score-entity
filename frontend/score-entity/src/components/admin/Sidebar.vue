@@ -6,12 +6,23 @@
     <ul class="flex flex-col py-4">
       <li>
         <router-link
+            to="/admin/scoreboard"
+            class="flex flex-row items-center h-12 transform hover:translate-x-2 transition-transform ease-in duration-200 text-gray-500 hover:text-gray-800"
+        >
+          <span class="inline-flex items-center justify-center h-12 w-12 text-lg text-gray-400"><i
+              class="bx bx-list-ol"></i></span>
+          <span class="text-sm font-medium">Scoreboard</span>
+        </router-link>
+      </li>
+
+      <li>
+        <router-link
             to="/admin/central"
             class="flex flex-row items-center h-12 transform hover:translate-x-2 transition-transform ease-in duration-200 text-gray-500 hover:text-gray-800"
         >
           <span class="inline-flex items-center justify-center h-12 w-12 text-lg text-gray-400"><i
               class="bx bx-home"></i></span>
-          <span class="text-sm font-medium">Zentrale</span>
+          <span class="text-sm font-medium">Punkteverteilung</span>
         </router-link>
       </li>
       <li>
@@ -21,27 +32,7 @@
         >
           <span class="inline-flex items-center justify-center h-12 w-12 text-lg text-gray-400"><i
               class="bx bx-group"></i></span>
-          <span class="text-sm font-medium">Teams</span>
-        </router-link>
-      </li>
-      <li>
-        <router-link
-            to="/admin/item"
-            class="flex flex-row items-center h-12 transform hover:translate-x-2 transition-transform ease-in duration-200 text-gray-500 hover:text-gray-800"
-        >
-          <span class="inline-flex items-center justify-center h-12 w-12 text-lg text-gray-400"><i
-              class="bx bx-grid"></i></span>
-          <span class="text-sm font-medium">Entitäten</span>
-        </router-link>
-      </li>
-      <li>
-        <router-link
-            to="/admin/event"
-            class="flex flex-row items-center h-12 transform hover:translate-x-2 transition-transform ease-in duration-200 text-gray-500 hover:text-gray-800"
-        >
-          <span class="inline-flex items-center justify-center h-12 w-12 text-lg text-gray-400"><i
-              class="bx bx-calendar-event"></i></span>
-          <span class="text-sm font-medium">Events</span>
+          <span class="text-sm font-medium">Teams/Gruppen</span>
         </router-link>
       </li>
       <li>

@@ -61,21 +61,6 @@
                 @click="doScore(number)"
             />
           </div>
-
-          <!-- Klickbare Liste der Items -->
-          <ul class="item-list">
-            <li
-                v-for="item in items"
-                class="item-list-entry"
-                @click="doScore(item.scoreValue ?? 0)"
-            >
-              <div class="item-header">
-                <span class="item-name">{{ item.name }}</span>
-                <span class="item-score">{{ item.scoreValue ?? 0 }}</span>
-              </div>
-            </li>
-          </ul>
-
         </div>
         <!-- Footer Buttons -->
         <template #footer>
@@ -124,13 +109,12 @@ const scoreDialog = ref(false);
 const score = ref<ScoreUpdateRequest>(initialScoreUpdate);
 
 const groups = ref<Group[]>([]);
-const items = ref<Item[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const config = new Configuration({
   basePath: 'http://localhost:8080',
 });
-const numbers = ref<number[]>(Array.from({length: 15}, (_, i) => i + 1));
+const numbers = ref<number[]>(Array.from({length: 30}, (_, i) => i + 1));
 
 
 // API-Instanz erstellen
@@ -154,16 +138,6 @@ const fetchGroups = async () => {
   }
 };
 
-const fetchItems = async () => {
-  try {
-    const response = await itemApi.itemsGet();
-    items.value = response.data;
-  } catch (err) {
-    error.value = 'Fehler beim Abrufen der Gruppen.';
-    console.error(err);
-  }
-};
-
 const doScore = async (numberToScore: number) => {
   try {
     score.value.points = checked.value ? numberToScore : -numberToScore;
@@ -181,8 +155,6 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
   scoreDialog.value = true;
   checked.value = true;
   score.value.groupId = event.data.id;
-
-  fetchItems()
 };
 
 const onImageClick = (item: Item) => {

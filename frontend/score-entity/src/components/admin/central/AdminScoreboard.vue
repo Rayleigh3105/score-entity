@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import Scoreboard from "@/components/Scoreboard.vue";
 
 </script>
 
 <template>
-  MOIN DIGGI Event
+  <Scoreboard/>
 
 </template>
 

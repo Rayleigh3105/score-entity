@@ -1,8 +1,7 @@
-import {createRouter, createWebHistory} from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import Scoreboard from "@/components/Scoreboard.vue";
 import AdminView from "@/components/admin/AdminView.vue";
 import TeamList from "@/components/admin/team/TeamList.vue";
-import EventList from "@/components/admin/event/EventList.vue";
 import Settings from "@/components/admin/settings/Settings.vue";
 import ItemList from "@/components/admin/item/ItemList.vue";
 import CentralView from "@/components/admin/central/CentralView.vue";
@@ -25,19 +24,19 @@ const routes = [
         component: AdminView,
         children: [
             {
+                path: '/admin/scoreboard',
+                name: 'Scoreboard',
+                component: Scoreboard,
+            },
+            {
                 path: '/admin/central',
-                name: 'Zentrale',
+                name: 'Punkteverwaltung',
                 component: CentralView,
             },
             {
                 path: '/admin/teams',
                 name: 'Teams',
                 component: TeamList,
-            },
-            {
-                path: '/admin/event',
-                name: 'Events',
-                component: EventList
             },
             {
                 path: '/admin/settings',
