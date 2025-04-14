@@ -93,6 +93,15 @@
                     @click="image = {imageUrl: '', publicId: ''}"/>
 
           </div>
+          <input
+            ref="cameraInput"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            @change="handleCameraPhoto"
+          />
+          <Button label="Foto machen" icon="pi pi-camera" @click="$refs.cameraInput.click()" class="mt-2" />
 
           <!-- Input Field for Name -->
           <div>
@@ -352,6 +361,26 @@ const image = ref<Image>({
   publicId: '',
   imageUrl: '',
 });
+
+const handleCameraPhoto = async (event: Event) => {
+  const fileInput = event.target as HTMLInputElement;
+  const file = fileInput?.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("demo[]", file);
+
+  try {
+    const uploadResponse = await fetch(config.basePath + "/file", {
+      method: "POST",
+      body: formData
+    });
+    const data = await uploadResponse.json();
+    image.value = data;
+  } catch (err) {
+    console.error("Fehler beim Hochladen des Kamera-Fotos:", err);
+  }
+};
 
 const onUpload = (event: FileUploadUploadEvent) => {
   const response = JSON.parse(event.xhr.response)

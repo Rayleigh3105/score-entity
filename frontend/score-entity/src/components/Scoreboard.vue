@@ -259,23 +259,26 @@ export default {
 
           if (node) {
             // Punktegewinn-Animation mit visueller Rückmeldung
-          if (oldGroup && oldGroup.totalScore !== newGroup.totalScore) {
+            if (oldGroup && oldGroup.totalScore !== newGroup.totalScore) {
               const isGain = newGroup.totalScore > oldGroup.totalScore;
-              const highlightClass = isGain ? "bg-green-100" : "bg-red-100";
-
-              node.classList.add(highlightClass);
+              const highlightColor = isGain ? "#bbf7d0" : "#fecaca"; // tailwind: green-100 / red-100
+              const originalBg = node.style.backgroundColor;
 
               gsap.fromTo(
                 node,
-                { scale: 1 },
+                {
+                  scale: 1,
+                  backgroundColor: highlightColor
+                },
                 {
                   scale: 1.1,
+                  backgroundColor: "",
                   duration: 0.4,
                   ease: "power1.inOut",
                   yoyo: true,
                   repeat: 1,
                   onComplete: () => {
-                    node.classList.remove(highlightClass);
+                    node.style.backgroundColor = originalBg;
                   }
                 }
               );

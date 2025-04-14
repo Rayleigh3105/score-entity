@@ -43,4 +43,9 @@ class GroupService {
         return group
     }
 
+    @Transactional
+    fun resetPoints() {
+        scoreRepository.deleteAll()
+    }
+
 }

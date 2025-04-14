@@ -46,10 +46,10 @@
     </DataTable>
 
     <template>
-      <Dialog v-model:visible="scoreDialog" :style="{ width: '450px' }" header="Punkte" :modal="true">
+      <Dialog v-model:visible="scoreDialog" :style="{ width: '600px' }" header="Punkte" :modal="true">
         <div>
           <div style="text-align: center">
-            <ToggleButton v-model="checked" onLabel="Addieren" offLabel="Subtrahieren" on-icon="bx bx-plus" off-icon="bx bx-minus" />
+            <ToggleButton class="my-2 text-lg" v-model="checked" onLabel="Addieren" offLabel="Subtrahieren" on-icon="bx bx-plus" off-icon="bx bx-minus"/>
           </div>
 
           <div class="button-grid mt-6">
@@ -57,13 +57,30 @@
                 v-for="number in numbers"
                 :key="number"
                 :label="number.toString()"
-                class="p-button-rounded p-button-primary button-item"
+                class="p-button-primary button-item"
                 @click="doScore(number)"
             />
+          </div>
+          <div class="mt-4 text-center">
+            <p class="text-sm mb-1">Oder eigene Punktzahl eingeben:</p>
+            <InputNumber
+                inputId="customPoints"
+                class="w-full text-lg"
+                :max="100000"
+                v-model="score.points"
+                mode="decimal"
+            />
+
           </div>
         </div>
         <!-- Footer Buttons -->
         <template #footer>
+          <Button
+              label="Bestätigen"
+              icon="pi pi-check"
+              class="mt-2"
+              @click="doScore(score.points ?? 0)"
+          />
           <Button label="Abbrechen" icon="bx bx-x" text @click="hideDialog"/>
         </template>
       </Dialog>
@@ -73,8 +90,8 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
-import {FilterMatchMode} from '@primevue/core/api';
+import { onMounted, ref } from 'vue';
+import { FilterMatchMode } from '@primevue/core/api';
 import {
   Configuration,
   type Group,
@@ -85,15 +102,16 @@ import {
 } from "@/api";
 
 import Toast from 'primevue/toast';
-import DataTable, {type DataTableRowSelectEvent} from 'primevue/datatable';
+import DataTable, { type DataTableRowSelectEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import {useToast} from "primevue";
+import { useToast } from "primevue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import ToggleButton from "primevue/togglebutton";
+import InputNumber from 'primevue/inputnumber';
 
 const toast = useToast();
 const filters = ref({
@@ -120,7 +138,6 @@ const numbers = ref<number[]>(Array.from({length: 30}, (_, i) => i + 1));
 // API-Instanz erstellen
 const groupApi = new GroupResourceApi(config);
 const scoreApi = new ScoreResourceApi(config);
-const itemApi = new ItemResourceApi(config);
 
 // Daten abrufen
 const fetchGroups = async () => {
@@ -148,6 +165,7 @@ const doScore = async (numberToScore: number) => {
     console.error(err);
   } finally {
     scoreDialog.value = false;
+    score.value.points = undefined;
   }
 };
 
@@ -174,20 +192,21 @@ onMounted(() => {
 <style scoped>
 .button-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 14px;
   justify-content: center;
   align-items: center;
 }
 
 .button-item {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 14px;
+  font-size: 18px;
 }
+
 /* Styling für die klickbare Liste */
 .item-list {
   list-style: none;

@@ -148,6 +148,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/PublisherString"
   /scores:
+    get:
+      tags:
+      - Score Resource
+      responses:
+        "200":
+          description: OK
     post:
       tags:
       - Score Resource

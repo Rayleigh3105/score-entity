@@ -2,6 +2,7 @@ package org.rayleigh.resource
 
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -24,6 +25,18 @@ class ScoreResource {
         return try {
             groupService.addPointsToGroup(request.groupId, request.points)
             Response.ok(mapOf("message" to "Points added successfully")).build()
+        } catch (e: IllegalArgumentException) {
+            Response.status(Response.Status.NOT_FOUND)
+                .entity(mapOf("error" to e.message))
+                .build()
+        }
+    }
+
+    @GET
+    fun resetPoints(): Response {
+        return try {
+            groupService.resetPoints()
+            Response.ok(mapOf("message" to "Points reset successfully")).build()
         } catch (e: IllegalArgumentException) {
             Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to e.message))
