@@ -132,7 +132,7 @@ const error = ref<string | null>(null);
 const config = new Configuration({
   basePath: 'http://localhost:8080',
 });
-const numbers = ref<number[]>(Array.from({length: 30}, (_, i) => i + 1));
+const numbers = ref<number[]>(Array.from({length: 20}, (_, i) => i + 1));
 
 
 // API-Instanz erstellen
@@ -199,12 +199,12 @@ onMounted(() => {
 }
 
 .button-item {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 18px;
+  font-size: 22px;
 }
 
 /* Styling für die klickbare Liste */

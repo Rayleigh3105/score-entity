@@ -165,6 +165,65 @@ paths:
       responses:
         "200":
           description: OK
+  /settings:
+    get:
+      tags:
+      - Settings Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    put:
+      tags:
+      - Settings Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    post:
+      tags:
+      - Settings Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+  /settings/{id}:
+    get:
+      tags:
+      - Settings Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
 components:
   schemas:
     FileItem:
@@ -305,6 +364,10 @@ components:
         scoreValue:
           format: int32
           type: integer
+    LocalDateTime:
+      format: date-time
+      type: string
+      example: 2022-03-10T12:15:50
     MultipartFormDataInput:
       type: object
       properties:
@@ -347,5 +410,24 @@ components:
         points:
           format: int32
           type: integer
+    Settings:
+      required:
+      - endTime
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        endTime:
+          $ref: "#/components/schemas/LocalDateTime"
+    SettingsUpdateRequest:
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+        endTime:
+          $ref: "#/components/schemas/LocalDateTime"
     UserPrincipalLookupService:
       type: object

@@ -28,6 +28,7 @@ class GroupResource {
     @Transactional
     fun addGroup(group: Group): Group {
         groupRepository.persist(group)
+        group.id?.let { groupService.addPointsToGroup(it, 0) }
         return group
     }
 

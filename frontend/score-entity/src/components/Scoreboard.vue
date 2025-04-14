@@ -13,6 +13,11 @@
          class="absolute top-1/3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 px-6 py-4 rounded-lg shadow-lg text-white text-4xl font-bold z-50 text-center font-mono leading-snug">
       <span v-html="introText"></span>
     </div>
+    <div v-if="globalCountdown" class="w-full flex justify-center pt-4">
+      <div class="bg-red-100 border-4 border-red-800 text-red-900 text-4xl font-bold font-mono px-8 py-4 rounded-lg shadow-lg text-center animate-pulse">
+        ⏳ Ende in: {{ globalCountdown }}
+      </div>
+    </div>
     <div ref="groupList" class="w-full px-8 pt-6 flex flex-col gap-4">
       <div
           v-for="(group, index) in groups"
@@ -103,6 +108,7 @@
 
 <script>
 import gsap from "gsap";
+import { Configuration, SettingsResourceApi } from "@/api";
 
 export default {
   name: "Scoreboard",
@@ -127,6 +133,8 @@ export default {
       defenderFainted: false, // Neue Datenvariable für besiegten Verteidiger
       defenderHPOverridePercent: null,
       showLeaderChange: false,
+      endTime: null,
+      globalCountdown: null,
       frankenAttacks: [
         "Broudwoschdschlag",
         "Kellerdapp",
@@ -149,6 +157,7 @@ export default {
   },
   mounted() {
     this.initializeSSE();
+    this.loadSettings();
   },
   beforeUnmount() {
     if (this.eventSource) {
@@ -156,6 +165,21 @@ export default {
     }
   },
   methods: {
+    loadSettings() {
+      const config = new Configuration({
+        basePath: 'http://localhost:8080',
+      });
+      const settingsApi = new SettingsResourceApi(config);
+
+      settingsApi.settingsIdGet(1).then((response) => {
+        if (response.status === 200) {
+          this.endTime = response.data.endTime;
+          this.startGlobalCountdown();
+        }
+      }).catch((error) => {
+        console.error("Fehler beim Laden der Einstellungen:", error);
+      });
+    },
     initializeSSE() {
       // SSE-Verbindung herstellen
       this.eventSource = new EventSource("http://localhost:8080/scoreboard-stream");
@@ -265,22 +289,22 @@ export default {
               const originalBg = node.style.backgroundColor;
 
               gsap.fromTo(
-                node,
-                {
-                  scale: 1,
-                  backgroundColor: highlightColor
-                },
-                {
-                  scale: 1.1,
-                  backgroundColor: "",
-                  duration: 0.4,
-                  ease: "power1.inOut",
-                  yoyo: true,
-                  repeat: 1,
-                  onComplete: () => {
-                    node.style.backgroundColor = originalBg;
+                  node,
+                  {
+                    scale: 1,
+                    backgroundColor: highlightColor
+                  },
+                  {
+                    scale: 1.1,
+                    backgroundColor: "",
+                    duration: 0.4,
+                    ease: "power1.inOut",
+                    yoyo: true,
+                    repeat: 1,
+                    onComplete: () => {
+                      node.style.backgroundColor = originalBg;
+                    }
                   }
-                }
               );
             }
 
@@ -317,6 +341,26 @@ export default {
           }
         });
       });
+    },
+    startGlobalCountdown() {
+      if (!this.endTime) return;
+
+      const update = () => {
+        const now = new Date();
+        const end = new Date(this.endTime);
+        const diff = end.getTime() - now.getTime();
+        if (diff <= 0) {
+          this.globalCountdown = "0h 0m 0s";
+          return;
+        }
+        const seconds = Math.floor(diff / 1000) % 60;
+        const minutes = Math.floor(diff / 60000) % 60;
+        const hours = Math.floor(diff / 3600000);
+        this.globalCountdown = `${hours}h ${minutes}m ${seconds}s`;
+      };
+
+      update(); // call once immediately
+      setInterval(update, 1000); // update every second
     },
     advanceBattle() {
       const phases = [

@@ -8,6 +8,7 @@ import org.rayleigh.entity.Group
 import org.rayleigh.entity.Score
 import org.rayleigh.repository.GroupRepository
 import org.rayleigh.repository.ScoreRepository
+import org.rayleigh.repository.SettingsRepository
 import java.time.LocalDateTime
 
 @ApplicationScoped
@@ -19,8 +20,17 @@ class GroupService {
     @Inject
     lateinit var scoreRepository: ScoreRepository
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     @Transactional
     fun addPointsToGroup(groupId: Long, points: Int): Score {
+        var settings = settingsRepository.findById(1)
+
+        if (settings != null && settings.endTime.isBefore(LocalDateTime.now())) {
+            throw IllegalArgumentException("Cannot add points after the end time.")
+        }
+
         // Suche nach der Gruppe
         val group = groupRepository.findById(groupId)
             ?: throw IllegalArgumentException("Group with ID $groupId not found.")
@@ -46,6 +56,10 @@ class GroupService {
     @Transactional
     fun resetPoints() {
         scoreRepository.deleteAll()
+        val groups = groupRepository.listAll()
+        for (group in groups) {
+            scoreRepository.persist(Score(group = group, points = 0, timestamp = LocalDateTime.now()))
+        }
     }
 
 }

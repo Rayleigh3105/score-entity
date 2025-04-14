@@ -20,7 +20,7 @@ class ScoreService {
                     groupId = group?.id ?: -1,
                     name = group?.name ?: "Unknown",
                     totalScore = groupScores.sumOf { it.points },
-                    imageUrl = group?.image?.imageUrl ?: ""
+                    imageUrl = group?.image?.imageUrl ?: "",
                 )
             }
             .sortedByDescending { it.totalScore }
