@@ -13,9 +13,15 @@
          class="absolute top-1/3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 px-6 py-4 rounded-lg shadow-lg text-white text-4xl font-bold z-50 text-center font-mono leading-snug">
       <span v-html="introText"></span>
     </div>
-    <div v-if="globalCountdown" class="w-full flex justify-center pt-4">
-      <div class="bg-red-100 border-4 border-red-800 text-red-900 text-4xl font-bold font-mono px-8 py-4 rounded-lg shadow-lg text-center animate-pulse">
-        ⏳ Ende in: {{ globalCountdown }}
+    <div class="w-full flex flex-col items-center pt-4 px-4">
+      <div class="flex flex-col md:flex-row justify-center gap-4 w-full max-w-6xl">
+        <div v-if="globalCountdown"
+             class="flex-1 bg-red-100 border-4 border-red-800 text-red-900 text-4xl font-bold font-mono px-8 py-4 rounded-lg shadow-lg text-center animate-pulse h-full flex items-center justify-center">
+          ⏳ Ende in: {{ globalCountdown }}
+        </div>
+        <div v-if="price" class="flex-1 bg-yellow-50 border-4 border-yellow-300 text-yellow-800 px-8 py-4 rounded-lg shadow-lg text-lg leading-relaxed prose h-full overflow-auto">
+          <div v-html="price"></div>
+        </div>
       </div>
     </div>
     <div ref="groupList" class="w-full px-8 pt-6 flex flex-col gap-4">
@@ -108,7 +114,7 @@
 
 <script>
 import gsap from "gsap";
-import { Configuration, SettingsResourceApi } from "@/api";
+import {settingsApi} from "@/router/api.custom";
 
 export default {
   name: "Scoreboard",
@@ -135,6 +141,7 @@ export default {
       showLeaderChange: false,
       endTime: null,
       globalCountdown: null,
+      price: "",
       frankenAttacks: [
         "Broudwoschdschlag",
         "Kellerdapp",
@@ -166,14 +173,12 @@ export default {
   },
   methods: {
     loadSettings() {
-      const config = new Configuration({
-        basePath: 'http://localhost:8080',
-      });
-      const settingsApi = new SettingsResourceApi(config);
+
 
       settingsApi.settingsIdGet(1).then((response) => {
         if (response.status === 200) {
           this.endTime = response.data.endTime;
+          this.price = response.data.price;
           this.startGlobalCountdown();
         }
       }).catch((error) => {
@@ -182,7 +187,7 @@ export default {
     },
     initializeSSE() {
       // SSE-Verbindung herstellen
-      this.eventSource = new EventSource("http://localhost:8080/scoreboard-stream");
+      this.eventSource = new EventSource("/scoreboard-stream");
 
       this.eventSource.onmessage = (event) => {
         try {
@@ -196,6 +201,7 @@ export default {
       this.eventSource.onerror = () => {
         console.error("SSE-Verbindung fehlgeschlagen");
         this.eventSource.close();
+        setTimeout(() => this.initializeSSE(), 5000);
       };
     },
     animateChanges(newGroups) {

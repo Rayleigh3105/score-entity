@@ -5,7 +5,6 @@ import Scoreboard from "@/components/Scoreboard.vue";
 
 <template>
   <Scoreboard/>
-
 </template>
 
 <style scoped>

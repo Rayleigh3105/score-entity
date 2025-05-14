@@ -1,0 +1,45 @@
+services:
+  backend:
+    image: be-score-entity
+    container_name: be-score-entity
+    ports:
+      - "8080:8080"
+    environment:
+      QUARKUS_DATASOURCE_DB_KIND: postgresql
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/score_entity
+      QUARKUS_DATASOURCE_USERNAME: mamotec
+      QUARKUS_DATASOURCE_PASSWORD: Mingda2022!
+    depends_on:
+      - db
+    networks:
+      - score-netz
+
+  frontend:
+    image: fe-score-entity
+    container_name: fe-score-entity
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - score-netz
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: score_entity
+      POSTGRES_USER: mamotec
+      POSTGRES_PASSWORD: Mingda2022!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - score-netz
+
+volumes:
+  postgres_data:
+
+networks:
+  score-netz:

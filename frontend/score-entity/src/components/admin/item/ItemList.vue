@@ -80,8 +80,8 @@
           <FileUpload
               mode="basic"
               accept="image/*"
-              name="demo[]"
-              :url="config.basePath + '/file'"
+              name="file"
+              :url="'/file'"
               :auto="true"
               chooseLabel="Auswählen"
               @upload="onUpload"
@@ -159,7 +159,6 @@
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
 import type {Item, Image, ItemUpdateRequest} from "@/api";
-import {Configuration, ItemResourceApi} from "@/api";
 
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -173,6 +172,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import FileUpload, {type FileUploadUploadEvent} from 'primevue/fileupload';
 import {useToast} from "primevue";
+import { backendUrl, itemApi } from "@/router/api.custom";
 
 const deleteItemDialog = ref(false);
 const deleteItemsDialog = ref(false);
@@ -193,12 +193,6 @@ const selectedItems = ref<Item[]>([]);
 const items = ref<Item[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const config = new Configuration({
-  basePath: 'http://localhost:8080',
-});
-
-// API-Instanz erstellen
-const itemApi = new ItemResourceApi(config);
 
 // Daten abrufen
 const fetchItems = async () => {
@@ -282,6 +276,7 @@ const updateItem = async () => {
       itemDialog.value = false;
       item.value = {...initialItem};
 
+      //@ts-ignore
       const index = items.value.findIndex(val => val.id === response.data.id);
       if (index != -1 && items.value[index]) {
         items.value[index] = response.data as unknown as Item;

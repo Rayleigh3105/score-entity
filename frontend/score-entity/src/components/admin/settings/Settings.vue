@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { Configuration, ScoreResourceApi, SettingsResourceApi } from "@/api";
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useToast } from "primevue";
 import Button from "primevue/button";
 import Toast from "primevue/toast";
 import Toolbar from "primevue/toolbar";
 import Dialog from "primevue/dialog";
 import Datepicker from 'primevue/datepicker';
+import Textarea from 'primevue/textarea';
+import { scoreApi, settingsApi } from "@/router/api.custom";
 
 const toast = useToast();
-
-const config = new Configuration({
-  basePath: 'http://localhost:8080',
-});
-
 const resetScoresDialog = ref(false);
 const endTime = ref<Date | null>(null);
+const price = ref<string>("");
 
 const confirmResetScores = () => {
   resetScoresDialog.value = true;
@@ -31,13 +28,11 @@ const saveSettings = async () => {
   if (!endTime.value) return;
 
   try {
-    const settingsApi = new SettingsResourceApi(config);
-
-    await settingsApi.settingsPut({endTime: toLocalISOString(endTime.value), id: 1});
+    await settingsApi.settingsPut({ endTime: toLocalISOString(endTime.value), price: price.value, id: 1 });
     toast.add({
       severity: 'success',
       summary: 'Gespeichert',
-      detail: 'Endzeitpunkt gespeichert.',
+      detail: 'Einstellungen gespeichert.',
       life: 3000,
     });
   } catch (error) {
@@ -45,7 +40,7 @@ const saveSettings = async () => {
     toast.add({
       severity: 'error',
       summary: 'Fehler',
-      detail: 'Endzeitpunkt konnte nicht gespeichert werden.',
+      detail: 'Einstellungen konnten nicht gespeichert werden.',
       life: 3000,
     });
   }
@@ -53,7 +48,6 @@ const saveSettings = async () => {
 
 const resetScores = async () => {
   try {
-    const scoreApi = new ScoreResourceApi(config);
     const response = await scoreApi.scoresGet();
     if (response.status === 200) {
       toast.add({
@@ -77,9 +71,9 @@ const resetScores = async () => {
 
 onMounted(async () => {
   try {
-    const settingsApi = new SettingsResourceApi(config);
     const result = await settingsApi.settingsIdGet(1);
     endTime.value = new Date(result.data.endTime);
+    price.value = result.data.price || "";
   } catch (error) {
     console.error("Fehler beim Laden der Einstellungen:", error);
   }
@@ -98,8 +92,13 @@ onMounted(async () => {
               <label for="endTime" class="block mb-1 font-medium">Endzeitpunkt</label>
               <Datepicker v-model="endTime" showTime hourFormat="24" id="endTime" :showIcon="true" date-format="dd.mm.yy"/>
             </div>
+          </div>
+          <div class="mt-2">
+            <label for="price" class="block mb-1 font-medium">Preis (HTML-Markdown)</label>
+            <Textarea id="price" v-model="price" autoResize rows="4" class="w-full" />
             <Button label="Speichern" icon="pi pi-save" severity="success" outlined class="self-end" @click="saveSettings"/>
           </div>
+
           <div>
             <Button label="Punkte zurücksetzen" icon="pi pi-refresh" severity="warning" outlined @click="confirmResetScores"/>
           </div>

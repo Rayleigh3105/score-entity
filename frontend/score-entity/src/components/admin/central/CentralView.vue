@@ -112,6 +112,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import ToggleButton from "primevue/togglebutton";
 import InputNumber from 'primevue/inputnumber';
+import { groupApi, scoreApi } from "@/router/api.custom";
 
 const toast = useToast();
 const filters = ref({
@@ -129,15 +130,8 @@ const score = ref<ScoreUpdateRequest>(initialScoreUpdate);
 const groups = ref<Group[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const config = new Configuration({
-  basePath: 'http://localhost:8080',
-});
 const numbers = ref<number[]>(Array.from({length: 20}, (_, i) => i + 1));
 
-
-// API-Instanz erstellen
-const groupApi = new GroupResourceApi(config);
-const scoreApi = new ScoreResourceApi(config);
 
 // Daten abrufen
 const fetchGroups = async () => {

@@ -66,3 +66,25 @@ Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
 # score-entity
+
+
+# DOCKER
+```shell script
+cd /Users/moritzv/IdeaProjects/score-entity
+```
+
+## FE
+Im root verzeichnis ausführen
+```shell script
+docker buildx build --platform linux/amd64  --no-cache -t mamotec/fe-score-entity -f frontend/score-entity/docker/Dockerfile frontend/score-entity
+```
+
+## BE
+Im root verzeichnis ausführen
+```shell script
+mvn clean package -DskipTests
+```
+
+```shell script
+docker buildx build --platform linux/amd64  -f src/main/docker/Dockerfile.jvm -t mamotec/be-score-entity .
+```

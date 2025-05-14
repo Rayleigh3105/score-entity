@@ -81,8 +81,8 @@
             <FileUpload
                 mode="basic"
                 accept="image/*"
-                name="demo[]"
-                :url="config.basePath + '/file'"
+                name="file[]"
+                :url="'/file'"
                 :auto="true"
                 chooseLabel="Auswählen"
                 @upload="onUpload"
@@ -94,14 +94,15 @@
 
           </div>
           <input
-            ref="cameraInput"
-            type="file"
-            accept="image/*"
-            capture="environment"
-            class="hidden"
-            @change="handleCameraPhoto"
+              name="file"
+              ref="cameraInput"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+              @change="handleCameraPhoto"
           />
-          <Button label="Foto machen" icon="pi pi-camera" @click="$refs.cameraInput.click()" class="mt-2" />
+          <Button label="Foto machen" icon="pi pi-camera" @click="handleClickCameraInput" class="mt-2"/>
 
           <!-- Input Field for Name -->
           <div>
@@ -154,10 +155,9 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
-import {FilterMatchMode} from '@primevue/core/api';
-import type {Group, Image} from "@/api";
-import {Configuration, GroupResourceApi} from "@/api";
+import { onMounted, ref } from 'vue';
+import { FilterMatchMode } from '@primevue/core/api';
+import type { Group, Image } from "@/api";
 
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -168,8 +168,9 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import FileUpload, {type FileUploadUploadEvent} from 'primevue/fileupload';
-import {useToast} from "primevue";
+import FileUpload, { type FileUploadUploadEvent } from 'primevue/fileupload';
+import { useToast } from "primevue";
+import { backendUrl, groupApi } from "@/router/api.custom";
 
 const deleteGroupDialog = ref(false);
 const deleteGroupsDialog = ref(false);
@@ -190,12 +191,8 @@ const selectedGroups = ref<Group[]>([]);
 const groups = ref<Group[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const config = new Configuration({
-  basePath: 'http://localhost:8080',
-});
 
-// API-Instanz erstellen
-const groupApi = new GroupResourceApi(config);
+const cameraInput = ref<HTMLInputElement | null>(null);
 
 // Daten abrufen
 const fetchGroups = async () => {
@@ -279,6 +276,7 @@ const updateGroup = async () => {
       groupDialog.value = false;
       group.value = {...initialGroup};
 
+      //@ts-ignore
       const index = groups.value.findIndex(val => val.id === response.data.id);
       if (index != -1 && groups.value[index]) {
         groups.value[index] = response.data as unknown as Group;
@@ -368,10 +366,10 @@ const handleCameraPhoto = async (event: Event) => {
   if (!file) return;
 
   const formData = new FormData();
-  formData.append("demo[]", file);
+  formData.append("file[]", file);
 
   try {
-    const uploadResponse = await fetch(config.basePath + "/file", {
+    const uploadResponse = await fetch("/file", {
       method: "POST",
       body: formData
     });
@@ -383,10 +381,15 @@ const handleCameraPhoto = async (event: Event) => {
 };
 
 const onUpload = (event: FileUploadUploadEvent) => {
+  console.log("File upload event:", event);
   const response = JSON.parse(event.xhr.response)
   image.value.imageUrl = response.imageUrl; // Update the reactive property
   image.value = response
   console.log('Image uploaded:', image.value);
+}
+
+const handleClickCameraInput = () => {
+  (cameraInput.value as HTMLInputElement | null)?.click();
 }
 
 

@@ -11,7 +11,10 @@ data class Settings(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = 0,
 
-    var endTime: LocalDateTime = LocalDateTime.now()
+    var endTime: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "price", length = 10000)
+    var price: String = "",
 ) {
     constructor() : this(0, LocalDateTime.now())
 }

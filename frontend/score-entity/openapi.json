@@ -166,16 +166,6 @@ paths:
         "200":
           description: OK
   /settings:
-    get:
-      tags:
-      - Settings Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Settings"
     put:
       tags:
       - Settings Resource
@@ -413,6 +403,7 @@ components:
     Settings:
       required:
       - endTime
+      - price
       type: object
       properties:
         id:
@@ -421,12 +412,16 @@ components:
           nullable: true
         endTime:
           $ref: "#/components/schemas/LocalDateTime"
+        price:
+          type: string
     SettingsUpdateRequest:
       type: object
       properties:
         id:
           format: int64
           type: integer
+        price:
+          type: string
         endTime:
           $ref: "#/components/schemas/LocalDateTime"
     UserPrincipalLookupService:

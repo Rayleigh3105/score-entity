@@ -18,14 +18,24 @@ class SettingsResource {
 
     @GET
     @Path("/{id}")
-    fun getOne(@PathParam("id") id: Long): Settings =
-        settingsRepository.findById(id) ?: throw NotFoundException("Setting not found")
+    @Transactional
+    fun getOne(@PathParam("id") id: Long): Settings {
+        var settings = settingsRepository.findById(id);
+
+        if (settings == null) {
+            settingsRepository.persist(Settings())
+            settings = settingsRepository.findById(id);
+        }
+
+        return settings ?: throw NotFoundException("Settings not found")
+    }
 
     @POST
     @Transactional
     fun create(setting: SettingsUpdateRequest): Settings {
         val newSetting = Settings(
             endTime = setting.endTime,
+            price = setting.price,
         )
         settingsRepository.persist(newSetting)
         return newSetting
@@ -37,6 +47,7 @@ class SettingsResource {
     fun update(updated: SettingsUpdateRequest): Settings {
         val setting = settingsRepository.findById(updated.id) ?: throw NotFoundException("Setting not found")
         setting.endTime = updated.endTime
+        setting.price = updated.price
         settingsRepository.persist(setting)
         return setting
     }

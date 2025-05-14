@@ -26,7 +26,27 @@ class FileResource {
         val img = Image()
 
         try {
-            val map = input.values.flatMap { it.value.map { cloudinaryFileService.uploadFile(it.fileItem) } }
+            val allParts = input.values
+            if (allParts.isNullOrEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(mapOf("error" to "No form data received"))
+                    .build()
+            }
+
+            // Print all parts for debugging
+            allParts.forEach { (key, value) ->
+                println("Key: $key, Value: $value")
+            }
+            val fileParts = input.values["file[]"]
+            if (fileParts.isNullOrEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(mapOf("error" to "No file with key 'file[]' received"))
+                    .build()
+            }
+
+            println("1")
+            val map = fileParts.map { cloudinaryFileService.uploadFile(it.fileItem) }
+            println("1")
             img.imageUrl = map[0]["secure_url"] as String
             img.publicId = map[0]["public_id"] as String
 
