@@ -182,7 +182,7 @@ export default {
     },
     initializeSSE() {
       // SSE-Verbindung herstellen
-      this.eventSource = new EventSource("http://localhost:8080/scoreboard-stream");
+      this.eventSource = new EventSource("/scoreboard-stream");
 
       this.eventSource.onmessage = (event) => {
         try {
