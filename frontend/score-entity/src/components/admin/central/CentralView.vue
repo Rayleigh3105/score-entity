@@ -160,6 +160,7 @@ const doScore = async (numberToScore: number) => {
   } finally {
     scoreDialog.value = false;
     score.value.points = undefined;
+    filters.value['global'].value = null;
   }
 };
 

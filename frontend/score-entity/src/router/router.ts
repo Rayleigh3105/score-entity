@@ -6,7 +6,6 @@ import Settings from "@/components/admin/settings/Settings.vue";
 import ItemList from "@/components/admin/item/ItemList.vue";
 import CentralView from "@/components/admin/central/CentralView.vue";
 
-// Routes ohne RouteRecordRaw typisieren
 const routes = [
     {
         path: '/',
@@ -23,11 +22,6 @@ const routes = [
         name: 'Admin',
         component: AdminView,
         children: [
-            {
-                path: '/admin/scoreboard',
-                name: 'Scoreboard',
-                component: Scoreboard,
-            },
             {
                 path: '/admin/central',
                 name: 'Punkteverwaltung',

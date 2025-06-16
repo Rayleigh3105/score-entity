@@ -19,7 +19,8 @@
              class="flex-1 bg-red-100 border-4 border-red-800 text-red-900 text-4xl font-bold font-mono px-8 py-4 rounded-lg shadow-lg text-center animate-pulse h-full flex items-center justify-center">
           ⏳ Ende in: {{ globalCountdown }}
         </div>
-        <div v-if="price" class="flex-1 bg-yellow-50 border-4 border-yellow-300 text-yellow-800 px-8 py-4 rounded-lg shadow-lg text-lg leading-relaxed prose h-full overflow-auto">
+        <div v-if="price"
+             class="flex-1 bg-yellow-50 border-4 border-yellow-300 text-yellow-800 px-8 py-4 rounded-lg shadow-lg text-lg leading-relaxed prose h-full overflow-auto">
           <div v-html="price"></div>
         </div>
       </div>
@@ -57,67 +58,67 @@
     </div>
 
     <!-- Pokémon Kampf Overlay -->
-    <div v-if="showBattle" class="fixed inset-0 z-50 font-mono bg-white text-black">
-      <div class="absolute inset-0 border-4 border-black bg-white">
-        <!-- Gegner Status -->
-        <div class="absolute top-[4vh] left-[3vw] w-[50vw] h-[9vh] border-4 border-black p-4">
-          <div class="flex justify-between text-xl font-bold">
-            <span>{{ battleDefender?.name }}</span>
-            <span>{{ defenderHP }}/{{ defenderMaxHP }} HP</span>
-          </div>
-          <div class="mt-2 text-base">HP</div>
-          <div class="w-full h-4 bg-white border border-black">
-            <div ref="defenderHpBar" class="h-full bg-green-700"
-                 :style="{ width: (defenderHPOverridePercent !== null ? defenderHPOverridePercent : defenderHPPercent) + '%' }"></div>
-          </div>
-        </div>
-
-        <!-- Gegner Sprite -->
-        <div class="absolute top-[8vh] right-[10vw] w-[24vw] h-[24vw]">
-          <img v-show="!defenderFainted" ref="defenderBox" :src="battleDefender?.imageUrl" class="w-full h-full object-contain pixelated"/>
-        </div>
-
-        <!-- Eigenes Pokémon Sprite -->
-        <div class="absolute bottom-[12vh] left-[10vw] w-[24vw] h-[24vw]">
-          <img ref="challengerBox" :src="battleChallenger?.imageUrl" class="w-full h-full object-contain pixelated"/>
-        </div>
-
-        <!-- Eigen Status -->
-        <div class="absolute bottom-[18vh] right-[3vw] w-[50vw] h-[9vh] border-4 border-black p-4">
-          <div class="flex justify-between text-xl font-bold">
-            <span>{{ battleChallenger?.name }}</span>
-            <span>{{ challengerHP }}/{{ challengerMaxHP }} HP</span>
-          </div>
-          <div class="mt-2 text-base">HP</div>
-          <div class="w-full h-4 bg-white border border-black">
-            <div class="h-full bg-green-700" :style="{ width: challengerHPPercent + '%' }"></div>
-          </div>
-        </div>
-
-        <!-- Angriffsanimation -->
-        <div v-if="showAttackEffect" class="absolute inset-0 flex items-center justify-end pr-[12vw] z-40 pointer-events-none">
-          <div class="w-24 h-24 bg-white border-4 border-black rounded-full animate-tackle"></div>
-        </div>
-
-        <!-- Textbox -->
-        <div class="absolute bottom-20 left-0 w-full border-t-4 border-black bg-white p-4 text-4xl font-semibold">
-          {{ battleText }}
-        </div>
-      </div>
-    </div>
+    <BattleOverlay
+        v-if="showBattle"
+        :challenger="battleChallenger"
+        :defender="battleDefender"
+        :defender-fainted="defenderFainted"
+        :defender-hp="defenderHP"
+        :defender-max-hp="defenderMaxHP"
+        :defender-hp-override-percent="defenderHPOverridePercent"
+        :challenger-hp="challengerHP"
+        :challenger-max-hp="challengerMaxHP"
+        :battle-text="battleText"
+        :show-attack-effect="showAttackEffect"
+        @battle-finished="onBattleFinished"
+        ref="battleOverlay"
+    />
   </div>
-  <div v-if="showLeaderChange" class="fixed inset-0 z-50 bg-black text-white flex flex-col items-center justify-center font-mono text-5xl font-bold text-center leading-snug px-8">
+  <div v-if="showLeaderChange"
+       class="fixed inset-0 z-50 bg-black text-white flex flex-col items-center justify-center font-mono text-5xl font-bold text-center leading-snug px-8">
     <div>Führungswechsel!</div>
     <div class="mt-4"><span class="text-yellow-300">{{ battleChallenger?.name }}</span> übernimmt die Spitze!</div>
+  </div>
+  <div v-if="rocketCountdown !== null" class="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center text-white text-9xl font-bold">
+    {{ rocketCountdown }}
+  </div>
+  <div v-if="showRocketRace" class="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-around items-end overflow-hidden">
+    <div
+        v-for="(participant, index) in [battleChallenger, battleDefender]"
+        :key="index"
+        :class="[
+        'flex flex-col items-center mb-10 rocket-wrapper',
+        'rocket-launch-' + index,
+        { 'winner': index === 0 }
+      ]"
+    >
+      <img
+          :src="participant?.imageUrl"
+          alt="Teilnehmer"
+          class="w-16 h-16 rounded-full border-2 border-white shadow mb-2 object-cover"
+      />
+      <div class="css-rocket">
+        <div class="rocket-head"></div>
+        <div class="rocket-body"></div>
+        <div class="rocket-fins"></div>
+        <div class="rocket-flame"></div>
+      </div>
+      <div class="mt-2 text-lg font-bold text-center text-white">{{ participant?.name }}</div>
+      <div v-if="index === 0" class="mt-4 explosion"></div>
+    </div>
   </div>
 </template>
 
 <script>
 import gsap from "gsap";
 import {settingsApi} from "@/router/api.custom";
+import BattleOverlay from "@/components/BattleOverlay.vue";
 
 export default {
   name: "Scoreboard",
+  components: {
+    BattleOverlay,
+  },
   data() {
     return {
       groups: [], // Aktuelle Liste der Gruppen
@@ -139,6 +140,8 @@ export default {
       defenderFainted: false, // Neue Datenvariable für besiegten Verteidiger
       defenderHPOverridePercent: null,
       showLeaderChange: false,
+      showRocketRace: false,
+      rocketCountdown: null,
       endTime: null,
       globalCountdown: null,
       price: "",
@@ -152,15 +155,9 @@ export default {
         "Gleißhammer",
         "Gsichtsgrabscher",
       ],
+      animationQueue: [],
+      animationInProgress: false,
     };
-  },
-  computed: {
-    challengerHPPercent() {
-      return (this.challengerHP / this.challengerMaxHP) * 100;
-    },
-    defenderHPPercent() {
-      return (this.defenderHP / this.defenderMaxHP) * 100;
-    }
   },
   mounted() {
     this.initializeSSE();
@@ -173,8 +170,6 @@ export default {
   },
   methods: {
     loadSettings() {
-
-
       settingsApi.settingsIdGet(1).then((response) => {
         if (response.status === 200) {
           this.endTime = response.data.endTime;
@@ -187,7 +182,7 @@ export default {
     },
     initializeSSE() {
       // SSE-Verbindung herstellen
-      this.eventSource = new EventSource("/scoreboard-stream");
+      this.eventSource = new EventSource("http://localhost:8080/scoreboard-stream");
 
       this.eventSource.onmessage = (event) => {
         try {
@@ -239,42 +234,12 @@ export default {
         const previousFirst = previousGroups[0];
         const currentFirst = newGroups[0];
 
+        // Prüfung auf Führungswechsel
         if (previousFirst && currentFirst && previousFirst.groupId !== currentFirst.groupId) {
           const challengerBefore = previousGroups.find(g => g.groupId === currentFirst.groupId);
           if (challengerBefore) {
-            this.introPhase = true;
-            this.introText = `<span class="text-yellow-300">${currentFirst.name}</span> fordert <span class="text-red-400">${previousFirst.name}</span> heraus!`;
-
-            setTimeout(() => {
-              this.introText = '';
-              this.showPokeball = true;
-
-              setTimeout(() => {
-                this.showPokeball = false;
-                this.introPhase = false;
-                this.battleChallenger = currentFirst;
-                this.battleDefender = previousFirst;
-                this.battlePhase = 0;
-                this.showBattle = true;
-
-                this.$nextTick(() => {
-                  // Setze Anfangszustand der Sprites
-                  gsap.set(this.$refs.challengerBox, {x: "-100vw", opacity: 0});
-                  gsap.set(this.$refs.defenderBox, {x: "100vw", opacity: 0});
-
-                  // Animation starten nach kurzer Verzögerung
-                  gsap.to(this.$refs.challengerBox, {x: 0, opacity: 1, duration: 1});
-                  gsap.to(this.$refs.defenderBox, {
-                    x: 0, opacity: 1, duration: 1, onComplete: () => {
-                      this.battleText = `${this.battleChallenger?.name} betritt das Festgelände!`;
-                      setTimeout(() => {
-                        this.advanceBattle();
-                      }, 3000); // Schnellere Einleitung der Tackle-Phase
-                    }
-                  });
-                });
-              }, 2000);
-            }, 5000);
+            // Führungswechsel-Animation in die Queue einreihen
+            this.queueLeaderChangeAnimation(currentFirst, previousFirst);
           }
         }
 
@@ -348,6 +313,72 @@ export default {
         });
       });
     },
+    // Neue Methode zum Einreihen von Führungswechsel-Animationen
+    queueLeaderChangeAnimation(challenger, defender) {
+      const animationTask = async () => {
+        // Gemeinsame Daten setzen
+        this.battleChallenger = challenger;
+        this.battleDefender = defender;
+        this.battlePhase = 0;
+
+        this.introPhase = true;
+        this.introText = `<span class="text-yellow-300">${challenger.name}</span> fordert <span class="text-red-400">${defender.name}</span> heraus!`;
+
+        // 5 Sekunden warten für Intro-Text
+        await this.sleep(5000);
+
+        this.introText = '';
+
+        // Zufällige Auswahl der Animation
+        const animations = ["battle", "rocket"];
+        let selected = animations[Math.floor(Math.random() * animations.length)];
+
+        if (selected === "battle") {
+          this.showPokeball = true;
+          await this.sleep(2000);
+          this.showPokeball = false;
+          this.introPhase = false;
+          this.showBattle = true;
+          // Warten bis Battle beendet ist - wird durch onBattleFinished() fortgesetzt
+        } else if (selected === "rocket") {
+          // Rocket-Animation komplett abwickeln
+          this.rocketCountdown = 3;
+          await new Promise(resolve => {
+            const countdownInterval = setInterval(() => {
+              if (this.rocketCountdown > 1) {
+                this.rocketCountdown--;
+              } else {
+                clearInterval(countdownInterval);
+                this.rocketCountdown = null;
+                resolve();
+              }
+            }, 1000);
+          });
+
+          this.showRocketRace = true;
+          await this.sleep(5000);
+          this.showRocketRace = false;
+          this.introPhase = false;
+
+          // Führungswechsel anzeigen
+          this.showLeaderChange = true;
+          await this.sleep(4000);
+          this.showLeaderChange = false;
+
+          // Animation beenden
+          this.resetBattleState();
+          this.finishAnimation();
+        }
+      };
+
+      // In Queue einreihen oder direkt starten
+      if (this.animationInProgress) {
+        this.animationQueue.push(animationTask);
+      } else {
+        this.animationInProgress = true;
+        animationTask();
+      }
+    },
     startGlobalCountdown() {
       if (!this.endTime) return;
 
@@ -368,103 +399,47 @@ export default {
       update(); // call once immediately
       setInterval(update, 1000); // update every second
     },
-    advanceBattle() {
-      const phases = [
-        `${this.battleChallenger?.name} setzt Schelle ein!`,
-        `${this.battleDefender?.name} ist kampfunfähig!`,
-        `${this.battleChallenger?.name} gewinnt den Kampf!`,
-      ];
+    async onBattleFinished() {
+      // Führungswechsel anzeigen
+      this.showLeaderChange = true;
+      await this.sleep(4000);
+      this.showLeaderChange = false;
 
-      this.battleText = phases[this.battlePhase];
-      if (this.battlePhase === 0) {
-        setTimeout(() => this.advanceBattle(), 4000);
-      }
+      // Battle-State zurücksetzen
+      this.resetBattleState();
 
-      if (this.battlePhase === 1) {
-        const attack = this.frankenAttacks[Math.floor(Math.random() * this.frankenAttacks.length)];
-        this.battleText = `${this.battleChallenger?.name} setzt ${attack} ein!`;
+      // Animation als beendet markieren
+      this.finishAnimation();
+    },
+    // Neue Hilfsmethode für Animation-Ende
+    finishAnimation() {
+      this.animationInProgress = false;
+      this.runNextAnimation();
+    },
+    runNextAnimation() {
+      if (this.animationInProgress) return;
+      if (this.animationQueue.length === 0) return;
 
-        gsap.to(this.$refs.challengerBox, {
-          x: "-5vw",
-          duration: 0.4,
-          ease: "power2.in",
-          onComplete: () => {
-            gsap.to(this.$refs.challengerBox, {
-              x: "0vw",
-              duration: 0.6,
-              ease: "power2.out"
-            });
-
-            setTimeout(() => {
-              gsap.fromTo(
-                  this.$refs.defenderBox,
-                  {opacity: 0},
-                  {
-                    opacity: 1,
-                    duration: 0.15,
-                    repeat: 6,
-                    yoyo: true
-                  }
-              );
-            }, 500); // Flackerverzögerung nach dem Stoß
-
-            setTimeout(() => this.advanceBattle(), 3000); // Zeit nach Tackle bis Phase 2
-          }
-        });
-      } else if (this.battlePhase === 2) {
-        const healthBar = this.$refs.defenderHpBar;
-        if (healthBar) {
-          gsap.to(this.$data, {
-            defenderHPOverridePercent: 0,
-            duration: 2,
-            ease: "power2.out",
-            onUpdate: () => {
-              if (this.defenderHPOverridePercent < 50 && healthBar) {
-                healthBar.style.backgroundColor = "#FFA500"; // orange ab 50%
-              }
-              if (this.defenderHPOverridePercent < 25 && healthBar) {
-                healthBar.style.backgroundColor = "#8B0000"; // rot ab 25%
-              }
-            },
-            onComplete: () => {
-              gsap.to(this.$refs.defenderBox, {
-                y: 100,
-                opacity: 0,
-                duration: 1.5,
-                ease: "power2.in",
-                onComplete: () => {
-                  this.defenderFainted = true;
-                  setTimeout(() => this.advanceBattle(), 1000);
-                }
-              });
-            }
-          });
-        }
-      } else if (this.battlePhase === 3) {
-        gsap.to(this.$refs.challengerBox, {
-          x: 0,
-          duration: 1,
-          onComplete: () => {
-            this.showBattle = false;
-            this.showLeaderChange = true;
-            setTimeout(() => {
-              this.showLeaderChange = false;
-              this.battleChallenger = null;
-              this.battleDefender = null;
-              this.battleText = '';
-              this.battlePhase = 0;
-              this.challengerHP = 100;
-              this.challengerMaxHP = 100;
-              this.defenderHP = 100;
-              this.defenderMaxHP = 100;
-              this.defenderFainted = false;
-              this.defenderHPOverridePercent = null;
-            }, 4000);
-          }
-        });
-      }
-
-      this.battlePhase++;
+      const next = this.animationQueue.shift();
+      this.animationInProgress = true;
+      next();
+    },
+    resetBattleState() {
+      this.showBattle = false;
+      this.battleChallenger = null;
+      this.battleDefender = null;
+      this.battleText = '';
+      this.battlePhase = 0;
+      this.challengerHP = 100;
+      this.challengerMaxHP = 100;
+      this.defenderHP = 100;
+      this.defenderMaxHP = 100;
+      this.defenderFainted = false;
+      this.defenderHPOverridePercent = null;
+    },
+    // Hilfsmethode für async sleep
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     },
   },
 };
@@ -480,10 +455,6 @@ export default {
     opacity: 1;
     transform: scale(1);
   }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out;
 }
 
 .animate-pulse {
@@ -534,10 +505,6 @@ export default {
     transform: scale(2);
     opacity: 0;
   }
-}
-
-.animate-tackle {
-  animation: tackle 1.5s ease-out; /* Verlangsame die Tackle-Animation */
 }
 
 .pokeball-container {
@@ -604,16 +571,135 @@ export default {
   }
 }
 
-.pixel-mask {
-  width: 100vw;
-  height: 100vh;
-  background: black;
-  clip-path: circle(150% at 50% 50%);
-  animation: pixelCircleClose 1s ease-in-out forwards;
-  image-rendering: pixelated;
+/* Rocket Launch Animations */
+.rocket-launch-0 {
+  animation: rocket-launch-0 6s ease-in-out forwards;
 }
 
-.pixelated {
-  image-rendering: pixelated;
+.rocket-launch-1 {
+  animation: rocket-launch-1 8s ease-in-out forwards;
+}
+
+@keyframes rocket-launch-0 {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-120vh);
+  }
+}
+
+@keyframes rocket-launch-1 {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-120vh);
+  }
+}
+
+.rocket-wrapper {
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in-out;
+}
+
+.explosion {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, red, orange, yellow);
+  border-radius: 50%;
+  animation: boom 0.8s ease-out;
+  margin-top: 10px;
+}
+
+@keyframes boom {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.winner {
+  z-index: 10;
+  filter: drop-shadow(0 0 20px yellow);
+}
+
+.css-rocket {
+  position: relative;
+  width: 24px;
+  height: 60px;
+  background: linear-gradient(to bottom, #ccc 30%, #f00 30% 70%, #ccc 70%);
+  border-radius: 12px;
+  margin: 0 auto;
+}
+
+.rocket-head {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50% 50% 0 0;
+  border: 2px solid black;
+}
+
+.rocket-body {
+  position: absolute;
+  top: 12px;
+  left: 4px;
+  width: 16px;
+  height: 30px;
+  background: white;
+  border: 2px solid black;
+}
+
+.rocket-fins {
+  position: absolute;
+  bottom: 8px;
+  left: -6px;
+  width: 36px;
+  height: 12px;
+  background: red;
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.rocket-flame {
+  position: absolute;
+  bottom: -12px;
+  left: 6px;
+  width: 12px;
+  height: 20px;
+  background: radial-gradient(ellipse at center, #ffd700 0%, #ff4500 80%);
+  border-radius: 50%;
+  animation: flicker 0.3s infinite;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+  30% {
+    opacity: 0.9;
+    transform: scaleY(1.1) scaleX(0.95);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.2) scaleX(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scaleY(1.05) scaleX(1);
+  }
 }
 </style>
