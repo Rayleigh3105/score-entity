@@ -18,7 +18,7 @@
         data-key="id"
         :value="groups"
         :paginator="true"
-        :rows="10"
+        :rows="25"
         :rowsPerPageOptions="[10, 25]"
         scrollable
         scroll-height="flex"

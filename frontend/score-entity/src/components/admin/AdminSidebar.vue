@@ -21,6 +21,16 @@
             <span class="text-sm font-medium">Teams/Gruppen</span>
           </router-link>
         </li>
+
+        <li>
+          <router-link
+              to="/admin/items"
+              class="flex items-center px-3 py-2 text-gray-500 hover:text-gray-800 transition"
+          >
+            <i class="bx bx-group mr-2 text-lg text-gray-400"></i>
+            <span class="text-sm font-medium">Items</span>
+          </router-link>
+        </li>
         <li>
           <router-link
             to="/admin/settings"
@@ -34,3 +44,5 @@
     </div>
   </nav>
 </template>
+<script setup lang="ts">
+</script>

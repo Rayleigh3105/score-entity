@@ -4,6 +4,126 @@ info:
   title: score-entity API
   version: 1.0.0-SNAPSHOT
 paths:
+  /areas:
+    get:
+      tags:
+      - Area Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Area"
+    post:
+      tags:
+      - Area Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Area"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Area"
+  /areas/{id}:
+    put:
+      tags:
+      - Area Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AreaUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - Area Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+  /deposits:
+    get:
+      tags:
+      - Deposit Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deposit"
+    post:
+      tags:
+      - Deposit Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Deposit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deposit"
+  /deposits/{id}:
+    put:
+      tags:
+      - Deposit Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - Deposit Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
   /file:
     post:
       tags:
@@ -216,6 +336,39 @@ paths:
                 $ref: "#/components/schemas/Settings"
 components:
   schemas:
+    Area:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          type: string
+    AreaUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+    Deposit:
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        value:
+          format: int32
+          type: integer
+    DepositUpdateRequest:
+      type: object
+      properties:
+        value:
+          format: int32
+          type: integer
     FileItem:
       type: object
       properties:
@@ -324,6 +477,9 @@ components:
     Item:
       required:
       - name
+      - price
+      - color
+      - areas
       type: object
       properties:
         id:
@@ -332,27 +488,46 @@ components:
           nullable: true
         name:
           type: string
-        image:
-          type: object
-          allOf:
-          - $ref: "#/components/schemas/Image"
-          nullable: true
-        scoreValue:
+        price:
+          type: number
+        quantity:
           format: int32
           type: integer
+        color:
+          type: string
+        areas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Area"
+        deposit:
+          type: object
+          allOf:
+          - $ref: "#/components/schemas/Deposit"
+          nullable: true
     ItemUpdateRequest:
+      required:
+      - price
+      - areaIds
       type: object
       properties:
         name:
           type: string
           nullable: true
-        image:
-          type: object
-          allOf:
-          - $ref: "#/components/schemas/Image"
-          nullable: true
-        scoreValue:
+        price:
+          type: number
+        quantity:
           format: int32
+          type: integer
+        color:
+          type: string
+          nullable: true
+        areaIds:
+          type: array
+          items:
+            format: int64
+            type: integer
+        depositId:
+          format: int64
           type: integer
     LocalDateTime:
       format: date-time

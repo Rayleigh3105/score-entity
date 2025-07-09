@@ -5,46 +5,43 @@ import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
-import org.rayleigh.data.item.ItemUpdateRequest
-import org.rayleigh.entity.Item
+import org.rayleigh.data.area.AreaUpdateRequest
+import org.rayleigh.entity.Area
 import org.rayleigh.repository.AreaRepository
-import org.rayleigh.repository.ItemRepository
-import org.rayleigh.service.ItemService
+import org.rayleigh.service.AreaService
 
-@Path("/items")
+@Path("/areas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-class ItemResource {
+class AreaResource {
 
     @Inject
-    lateinit var itemRepository: ItemRepository
+    lateinit var areaRepository: AreaRepository
 
     @Inject
-    lateinit var itemService: ItemService
+    lateinit var areaService: AreaService
 
     @GET
-    fun getAllItems(): List<Item> = itemRepository.listAll()
+    fun getAllAreas(): List<Area> = areaRepository.listAll()
 
     @POST
     @Transactional
-    fun addItem(item: Item): Item {
-        itemRepository.persist(item)
-        return item;
+    fun addItem(item: Area): Area {
+        areaRepository.persist(item)
+        return item
     }
-
-
 
     @DELETE
     @Path("/{id}")
     @Transactional
-    fun deleteItem(@PathParam("id") id: Long): Response {
-        val item = itemRepository.findById(id)
+    fun deleteArea(@PathParam("id") id: Long): Response {
+        val item = areaRepository.findById(id)
         if (item != null) {
-            itemRepository.delete(item)
+            areaRepository.delete(item)
             return Response.noContent().build() // Status 204 (No Content)
         }
         return Response.status(Response.Status.NOT_FOUND)
-            .entity(mapOf("error" to "Item with ID $id not found"))
+            .entity(mapOf("error" to "Area with ID $id not found"))
             .build()
     }
 
@@ -52,9 +49,9 @@ class ItemResource {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun updateItem(@PathParam("id") id: Long, request: ItemUpdateRequest): Response {
+    fun updateArea(@PathParam("id") id: Long, request: AreaUpdateRequest): Response {
         return try {
-            val updatedItem = itemService.updateItem(id, request)
+            val updatedItem = areaService.updateItem(id, request)
             Response.ok(updatedItem).build()
         } catch (e: IllegalArgumentException) {
             Response.status(Response.Status.NOT_FOUND)

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import Sidebar from './Sidebar.vue';
+import AdminSidebar from './AdminSidebar.vue';
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col bg-gray-100">
     <!-- Horizontales Menü oberhalb -->
-    <Sidebar/>
+    <AdminSidebar/>
 
     <!-- Hauptinhalt -->
     <div class="flex-1 p-5">

@@ -73,6 +73,12 @@
         @battle-finished="onBattleFinished"
         ref="battleOverlay"
     />
+    <MoorhuhnOverlay
+        v-if="showMoorhuhn"
+        :challenger="battleChallenger"
+        :defender="battleDefender"
+        @moorhuhn-finished="onMoorhuhnFinished"
+    />
   </div>
   <div v-if="showLeaderChange"
        class="fixed inset-0 z-50 bg-black text-white flex flex-col items-center justify-center font-mono text-5xl font-bold text-center leading-snug px-8">
@@ -113,11 +119,13 @@
 import gsap from "gsap";
 import {settingsApi} from "@/router/api.custom";
 import BattleOverlay from "@/components/BattleOverlay.vue";
+import MoorhuhnOverlay from "@/components/MohrhunOverlay.vue";
 
 export default {
   name: "Scoreboard",
   components: {
     BattleOverlay,
+    MoorhuhnOverlay,
   },
   data() {
     return {
@@ -126,6 +134,7 @@ export default {
       eventSource: null, // SSE-Verbindung
       showBattle: false,
       showPokeball: false,
+      showMoorhuhn: false,
       battleChallenger: null,
       battleDefender: null,
       battlePhase: 0,
@@ -162,10 +171,19 @@ export default {
   mounted() {
     this.initializeSSE();
     this.loadSettings();
+    // Automatischer Reload alle 5 Minuten, falls keine Animation läuft
+    this._reloadInterval = setInterval(() => {
+      if (this.animationInProgress === false) {
+        window.location.reload();
+      }
+    }, 300000); // 300000 ms = 5 Minuten
   },
   beforeUnmount() {
     if (this.eventSource) {
       this.eventSource.close(); // SSE-Verbindung schließen
+    }
+    if (this._reloadInterval) {
+      clearInterval(this._reloadInterval);
     }
   },
   methods: {
@@ -234,13 +252,23 @@ export default {
         const previousFirst = previousGroups[0];
         const currentFirst = newGroups[0];
 
-        // Prüfung auf Führungswechsel
-        if (previousFirst && currentFirst && previousFirst.groupId !== currentFirst.groupId) {
-          const challengerBefore = previousGroups.find(g => g.groupId === currentFirst.groupId);
-          if (challengerBefore) {
-            // Führungswechsel-Animation in die Queue einreihen
-            this.queueLeaderChangeAnimation(currentFirst, previousFirst);
+        // Prüfung auf Führungswechsel, aber nur wenn auch die Punktzahl unterschiedlich ist
+        if (
+          previousFirst &&
+          currentFirst &&
+          previousFirst.groupId !== currentFirst.groupId
+        ) {
+          // Nur animieren, wenn sich die Punktzahl unterscheidet
+          if (previousFirst.totalScore !== currentFirst.totalScore) {
+            const challengerBefore = previousGroups.find(
+              (g) => g.groupId === currentFirst.groupId
+            );
+            if (challengerBefore) {
+              // Führungswechsel-Animation in die Queue einreihen
+              this.queueLeaderChangeAnimation(currentFirst, previousFirst);
+            }
           }
+          // Wenn Punktzahl gleich, KEINE Führungswechsel-Animation (tue nichts)
         }
 
         // Vergleiche Gruppen und animiere Punktegewinne oder Positionswechsel
@@ -330,7 +358,7 @@ export default {
         this.introText = '';
 
         // Zufällige Auswahl der Animation
-        const animations = ["battle", "rocket"];
+        const animations = ["battle", "rocket", "moorhuhn"];
         let selected = animations[Math.floor(Math.random() * animations.length)];
 
         if (selected === "battle") {
@@ -368,6 +396,9 @@ export default {
           // Animation beenden
           this.resetBattleState();
           this.finishAnimation();
+        } else if (selected === "moorhuhn") {
+          this.showMoorhuhn = true;
+          this.introPhase = false;
         }
       };
 
@@ -409,6 +440,14 @@ export default {
       this.resetBattleState();
 
       // Animation als beendet markieren
+      this.finishAnimation();
+    },
+    async onMoorhuhnFinished() {
+      this.showMoorhuhn = false;
+      this.showLeaderChange = true;
+      await this.sleep(4000);
+      this.showLeaderChange = false;
+      this.resetBattleState();
       this.finishAnimation();
     },
     // Neue Hilfsmethode für Animation-Ende

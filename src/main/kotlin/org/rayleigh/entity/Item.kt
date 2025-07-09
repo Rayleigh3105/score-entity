@@ -1,6 +1,7 @@
 package org.rayleigh.entity
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 
 @Entity
 @Table(name = "items")
@@ -12,8 +13,23 @@ class Item(
 
     var name: String = "",
 
-    @OneToOne(orphanRemoval = false)
-    var image: Image? = null,
+    @Column(precision = 10, scale = 2)
+    var price: BigDecimal = BigDecimal.ZERO,
 
-    var scoreValue: Int = 0
+    var quantity: Int = 0,
+
+    var color: String = "",
+
+    @field:ManyToMany(fetch = FetchType.EAGER)
+    @field:JoinTable(
+        name = "item_areas",
+        joinColumns = [JoinColumn(name = "item_id")],
+        inverseJoinColumns = [JoinColumn(name = "area_id")]
+    )
+    var areas: MutableList<Area> = mutableListOf(),
+
+    @ManyToOne
+    @JoinColumn(name = "deposit_id")
+    var deposit: Deposit? = null
+
 )

@@ -89,7 +89,7 @@ export default {
   data() {
     return {
       battlePhase: 0,
-      frankenAttacks: ["Schelle", "Kellerkick", "Hopfenklatsche", "Haxenfeger"],
+      frankenAttacks: ["Durstlöscher", "Pegelpeitsche", "Gsichtsgrabscher", "Bierbombe", "Schnapssturm", "Katerschlag", "Kotzgewitter"],
       localBattleText: "",
       animatedHpPercent: 100,
     };

@@ -13,9 +13,9 @@
     <DataTable
         ref="dt"
         :filters="filters"
-        v-model:selection="selectedItems"
         data-key="id"
         :value="items"
+        selectionMode="single"
         :paginator="true"
         :rows="10"
         :rowsPerPageOptions="[10, 25]"
@@ -33,24 +33,33 @@
           </IconField>
         </div>
       </template>
-      <Column selectionMode="multiple" style="width: 3rem"></Column>
-      <Column header="Bild" style="width: 3rem">
+      <Column field="name" header="Name"></Column>
+      <Column field="price" header="Preis">
         <template #body="{ data }">
-          <div class="flex items-center gap-2">
-            <img v-if="data.image?.imageUrl"
-                 alt="Itembild"
-                 :src="data.image?.imageUrl"
-                 style="width: 32px"/>
-            <img v-else
-                 alt="Itembild"
-                 class="rounded-full"
-                 src="https://res.cloudinary.com/drcmgtifj/image/upload/c_thumb,w_200,g_face/v1732888382/vecteezy_hand-drawnman-avatar-profile-icon-for-social-networks__cvzd71.jpg"
-                 style="width: 32px"/>
-          </div>
+          {{ data.price.toFixed(2).replace('.', ',') }} €
         </template>
       </Column>
-      <Column field="name" header="Name"></Column>
-      <Column field="scoreValue" header="Wert Punktezahl"></Column>
+      <Column field="quantity" header="Menge"></Column>
+      <Column header="Bereich">
+        <template #body="{ data }">
+          <span v-if="data.areas && data.areas.length">
+            {{
+              areas.filter((a: Area) => data.areas.map((ar: Area) => ar.id).includes(a.id))
+                  .map((a: Area) => a.name ?? '')
+                  .join(', ')
+            }}
+          </span>
+          <span v-else>–</span>
+        </template>
+      </Column>
+      <Column header="Pfand">
+        <template #body="{ data }">
+          <span v-if="data.deposit">
+            {{ (data.deposit.name && data.deposit.name.trim() !== '' ? data.deposit.name : (data.deposit.value !== undefined ? data.deposit.value.toFixed(2).replace('.', ',') + ' €' : '')) }}
+          </span>
+          <span v-else>–</span>
+        </template>
+      </Column>
       <Column :exportable="false" style="min-width: 12rem; text-align: right">
         <template #body="slotProps">
           <Button icon="bx bx-pencil" outlined rounded class="mr-2" @click="editItem(slotProps.data)"/>
@@ -61,37 +70,6 @@
 
     <Dialog v-model:visible="itemDialog" :style="{ width: '450px' }" header="Item Details" :modal="true">
       <div class="flex flex-col gap-6">
-        <!-- Centered and Bigger Image -->
-        <div class="flex justify-center">
-          <img
-              v-if="image.imageUrl"
-              class="w-32 h-32 rounded-sm bg-gray-50 object-cover"
-              :src="image.imageUrl"
-              alt="Itembild"
-          />
-          <img v-else
-               class="w-32 h-32 rounded-full bg-gray-50 object-cover"
-               src="https://res.cloudinary.com/drcmgtifj/image/upload/c_thumb,w_200,g_face/v1732888382/vecteezy_hand-drawnman-avatar-profile-icon-for-social-networks__cvzd71.jpg"
-               alt="Itembild"/>
-        </div>
-
-        <!-- File Upload First -->
-        <div v-if="!image.imageUrl">
-          <FileUpload
-              mode="basic"
-              accept="image/*"
-              name="file"
-              :url="'/file'"
-              :auto="true"
-              chooseLabel="Auswählen"
-              @upload="onUpload"
-          />
-        </div>
-        <div class="flex justify-center" v-else>
-          <Button icon="bx bx-trash" outlined rounded severity="danger"
-                  @click="image = {imageUrl: '', publicId: ''}"/>
-        </div>
-
         <!-- Input Field for Name -->
         <div>
           <label for="name" class="block font-bold mb-3">Name</label>
@@ -106,18 +84,80 @@
           <small v-if="submitted && !item.name" class="text-red-500">Name muss gesetzt werden.</small>
         </div>
 
-        <!-- Input Field for Name -->
         <div>
-          <label for="scoreValue" class="block font-bold mb-3">Wert Punktezahl</label>
+          <label for="price" class="block font-bold mb-3">Preis</label>
           <InputNumber
-              id="scoreValue"
-              v-model.number="item.scoreValue"
+              id="price"
+              v-model.number="item.price"
+              mode="decimal"
+              :minFractionDigits="2"
               required="true"
-              autofocus
-              :invalid="submitted && !item.scoreValue"
+              :invalid="submitted && (item.price === null || item.price === undefined)"
               fluid
           />
-          <small v-if="submitted && !item.scoreValue" class="text-red-500">Wert muss gesetzt werden.</small>
+          <small v-if="submitted && (item.price === null || item.price === undefined)" class="text-red-500">Preis muss gesetzt werden.</small>
+        </div>
+
+        <div>
+          <label for="quantity" class="block font-bold mb-3">Menge</label>
+          <InputNumber
+              id="quantity"
+              v-model.number="item.quantity"
+              required="true"
+              :invalid="submitted && item.quantity == null"
+              fluid
+          />
+          <small v-if="submitted && item.quantity == null" class="text-red-500">Menge muss gesetzt werden.</small>
+        </div>
+
+        <div>
+          <label for="deposit" class="block font-bold mb-3">Pfand</label>
+          <select
+              id="deposit"
+              v-model="item.deposit"
+              class="w-full p-2 border rounded"
+              :style="{ height: '2.5rem' }"
+          >
+            <option :value="undefined">Kein Pfand</option>
+            <option v-for="d in deposits" :key="d.id ?? d.value" :value="d">
+              {{ d.name && d.name.trim() !== '' ? d.name : (d.value !== undefined ? d.value.toFixed(2).replace('.', ',') + ' €' : '') }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label for="areas" class="block font-bold mb-3">Bereiche</label>
+          <MultiSelect
+              id="areas"
+              v-model="item.areas"
+              :options="areas"
+              optionLabel="name"
+              placeholder="Bitte wählen"
+              :class="{ 'p-invalid': submitted && (!item.areas || !item.areas.length) }"
+              display="chip"
+              filter
+              fluid
+          />
+          <small v-if="submitted && (!item.areas || !item.areas.length)" class="text-red-500">Mindestens ein Bereich muss gesetzt werden.</small>
+        </div>
+
+        <div>
+          <label for="color" class="block font-bold mb-3">Farbe</label>
+          <ColorPicker
+              id="color"
+              v-model="item.color"
+              inline
+          />
+        </div>
+
+        <div>
+          <label for="colorHex" class="block font-bold mb-3">Hex-Farbcode</label>
+          <InputText
+              id="colorHex"
+              v-model="item.color"
+              placeholder="#000000"
+              fluid
+          />
         </div>
       </div>
 
@@ -158,7 +198,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {FilterMatchMode} from '@primevue/core/api';
-import type {Item, Image, ItemUpdateRequest} from "@/api";
+import type {Area, Deposit, Item, ItemUpdateRequest} from "@/api";
+import {areaApi, depositApi, itemApi} from "@/router/api.custom";
 
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -170,19 +211,22 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import FileUpload, {type FileUploadUploadEvent} from 'primevue/fileupload';
+import ColorPicker from 'primevue/colorpicker';
+import MultiSelect from 'primevue/multiselect';
 import {useToast} from "primevue";
-import { backendUrl, itemApi } from "@/router/api.custom";
 
 const deleteItemDialog = ref(false);
 const deleteItemsDialog = ref(false);
 const initialItem : Item = {
   id: null,
   name: '',
-  scoreValue: 1,
-  image: undefined,
+  price: 0,
+  quantity: 0,
+  color: '#ffffff',
+  areas: [] as Area[],
+  deposit: undefined,
 }
-const item = ref<Item>(initialItem);
+const item = ref<Item>({...initialItem});
 const itemDialog = ref(false);
 const submitted = ref(false);
 const toast = useToast();
@@ -191,9 +235,14 @@ const filters = ref({
 });
 const selectedItems = ref<Item[]>([]);
 const items = ref<Item[]>([]);
+const areas = ref<Area[]>([]);
+const deposits = ref<DepositWithName[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
+export interface DepositWithName extends Deposit {
+  name: string;
+}
 // Daten abrufen
 const fetchItems = async () => {
   isLoading.value = true;
@@ -201,7 +250,11 @@ const fetchItems = async () => {
 
   try {
     const response = await itemApi.itemsGet();
-    items.value = response.data;
+    // Map each item to include areas list (no change needed)
+    items.value = response.data.map(it => ({
+      ...it,
+      areas: it.areas || []
+    }));
   } catch (err) {
     error.value = 'Fehler beim Abrufen der Items.';
     console.error(err);
@@ -210,9 +263,43 @@ const fetchItems = async () => {
   }
 };
 
+const fetchAreas = async () => {
+  try {
+    const res = await areaApi.areasGet();
+    areas.value = res.data;
+  } catch (e) {
+    console.error("Fehler beim Laden der Bereiche:", e);
+  }
+};
+
+const fetchDeposits = async () => {
+  try {
+    const res = await depositApi.depositsGet();
+    // Name ergänzen falls leer
+    deposits.value = res.data.map((d: Deposit) => ({
+      ...d,
+      // @ts-ignore
+      name: d.name && d.name.trim() !== ''
+          // @ts-ignore
+          ? d.name
+          // @ts-ignore
+          : `Pfand ${d.value.toFixed(2).replace('.', ',')} €`
+    }));
+  } catch (e) {
+    console.error("Fehler beim Laden der Pfandarten:", e);
+  }
+};
+
+onMounted(() => {
+  fetchItems();
+  fetchAreas();
+  fetchDeposits();
+});
+
 const openNew = () => {
   item.value = {...initialItem};
-  image.value = {publicId: '', imageUrl: ''};
+  item.value.areas = [];
+  item.value.deposit = undefined;
   submitted.value = false;
   itemDialog.value = true;
 };
@@ -224,34 +311,27 @@ const hideDialog = () => {
 
 const createItem = async () => {
   try {
-    if (image.value.id) {
-      item.value.image = image.value
-    } else {
-      item.value.image = undefined;
-    }
-    const response = await itemApi.itemsPost(item.value);
+    const createRequest: Omit<Item, 'id'> = {
+      name: item.value.name,
+      price: item.value.price,
+      quantity: item.value.quantity,
+      color: item.value.color,
+      areas : item.value.areas,
+      deposit: item.value.deposit
+    };
 
+    console.log("Erstelle Item mit Request:", createRequest);
+    const response = await itemApi.itemsPost(createRequest);
     if (response.data.id && response.status === 200) {
       submitted.value = true;
-      toast.add({
-        severity: 'success',
-        summary: 'Erfolgreich',
-        detail: 'Item erfolgreich erstellt.',
-        life: 3000
-      });
+      toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Item erstellt.', life: 3000});
       itemDialog.value = false;
       item.value = {...initialItem};
-
-      items.value.push(response.data);
+      await fetchItems();
     }
-  } catch (error) {
-    console.error('Fehler beim Speichern des Items:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: 'Item konnte nicht gespeichert werden.',
-      life: 3000,
-    });
+  } catch (e) {
+    console.error(e);
+    toast.add({severity: 'error', summary: 'Fehler', detail: 'Erstellung fehlgeschlagen.', life: 3000});
   }
 };
 
@@ -259,8 +339,11 @@ const updateItem = async () => {
   try {
     const updateRequest: ItemUpdateRequest = {
       name: item.value.name,
-      image: image.value,
-      scoreValue: item.value.scoreValue,
+      price: item.value.price,
+      quantity: item.value.quantity,
+      color: item.value.color,
+      areaIds: item.value.areas.map(a => a.id).filter((id): id is number => id !== undefined),
+      depositId: item.value.deposit?.id ?? undefined,
     };
 
     const response = await itemApi.itemsIdPut(item.value.id as number, updateRequest);
@@ -276,12 +359,11 @@ const updateItem = async () => {
       itemDialog.value = false;
       item.value = {...initialItem};
 
-      //@ts-ignore
+      // @ts-ignore
       const index = items.value.findIndex(val => val.id === response.data.id);
-      if (index != -1 && items.value[index]) {
+      if (index !== -1 && items.value[index]) {
         items.value[index] = response.data as unknown as Item;
       }
-
     }
   } catch (error) {
     console.error('Fehler beim Speichern des Items:', error);
@@ -350,27 +432,22 @@ const deleteItem = async () => {
 }
 
 const editItem = (itm: Item) => {
-  item.value = {...itm};
-  image.value = itm.image ?? {publicId: '', imageUrl: ''};
+  let mappedDeposit: Deposit | undefined = undefined;
+  if (itm.deposit && itm.deposit.id) {
+    mappedDeposit = deposits.value.find(d => d.id === itm.deposit?.id);
+  }
+  item.value = {...itm, deposit: mappedDeposit};
   itemDialog.value = true;
 };
-
-const image = ref<Image>({
-  publicId: '',
-  imageUrl: '',
-});
-
-const onUpload = (event: FileUploadUploadEvent) => {
-  const response = JSON.parse(event.xhr.response)
-  image.value.imageUrl = response.imageUrl; // Update the reactive property
-  image.value = response
-  console.log('Image uploaded:', image.value);
-}
-
-onMounted(() => {
-  fetchItems();
-});
 </script>
 
 <style scoped>
+.p-datatable .p-datatable-thead > tr > th,
+.p-datatable .p-datatable-tbody > tr > td {
+  white-space: nowrap;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+}
 </style>

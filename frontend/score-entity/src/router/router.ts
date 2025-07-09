@@ -5,6 +5,8 @@ import TeamList from "@/components/admin/team/TeamList.vue";
 import Settings from "@/components/admin/settings/Settings.vue";
 import ItemList from "@/components/admin/item/ItemList.vue";
 import CentralView from "@/components/admin/central/CentralView.vue";
+import BasicView from "@/components/basic/BasicView.vue";
+import Calculator from "@/components/basic/Calculator.vue";
 
 const routes = [
     {
@@ -16,6 +18,29 @@ const routes = [
         path: '/scoreboard',
         name: 'Scoreboard',
         component: Scoreboard,
+    },
+    {
+        path: '/calc',
+        name: 'Calculator',
+        component: Calculator,
+    },
+
+    {
+        path: '/basic',
+        name: 'Basis',
+        component: BasicView,
+        children: [
+            {
+                path: '/basic/central',
+                name: 'Punkteverwaltung1',
+                component: CentralView,
+            },
+            {
+                path: '/basic/calculator',
+                name: 'Rechner',
+                component: Calculator,
+            },
+        ]
     },
     {
         path: '/admin',
@@ -38,7 +63,7 @@ const routes = [
                 component: Settings
             },
             {
-                path: '/admin/item',
+                path: '/admin/items',
                 name: 'Items',
                 component: ItemList
             },
